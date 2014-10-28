@@ -2,10 +2,10 @@
 <merger version="2" >
 
     <dataSet config="main" >
-        <source path="/home/simone/workspace/FaceTest/libraries/opencv/src/main/assets" />
+        <source path="/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/src/main/assets" />
     </dataSet>
     <dataSet config="debug" >
-        <source path="/home/simone/workspace/FaceTest/libraries/opencv/src/debug/assets" />
+        <source path="/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/src/debug/assets" />
     </dataSet>
 
 </merger>

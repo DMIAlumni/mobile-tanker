@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- From: file:/home/simone/workspace/FaceTest/libraries/opencv/res/values/attrs.xml -->
+    <!-- From: file:/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/res/values/attrs.xml -->
     <eat-comment />
 
     <declare-styleable name="CameraBridgeViewBase">

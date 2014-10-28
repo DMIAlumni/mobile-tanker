@@ -2,9 +2,9 @@
 <merger version="2" >
 
     <dataSet config="main" >
-        <source path="/home/simone/workspace/FaceTest/libraries/opencv/res" >
+        <source path="/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/res" >
             <file
-                path="/home/simone/workspace/FaceTest/libraries/opencv/res/values/attrs.xml"
+                path="/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/res/values/attrs.xml"
                 qualifiers="" >
                 <declare-styleable name="CameraBridgeViewBase" >
                     <attr
@@ -26,11 +26,11 @@
                 </declare-styleable>
             </file>
         </source>
-        <source path="/home/simone/workspace/FaceTest/libraries/opencv/build/generated/res/rs/debug" />
-        <source path="/home/simone/workspace/FaceTest/libraries/opencv/build/generated/res/generated/debug" />
+        <source path="/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/build/generated/res/rs/debug" />
+        <source path="/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/build/generated/res/generated/debug" />
     </dataSet>
     <dataSet config="debug" >
-        <source path="/home/simone/workspace/FaceTest/libraries/opencv/src/debug/res" />
+        <source path="/home/simone/workspace/mobile-tanker/Android/FaceTest/libraries/opencv/src/debug/res" />
     </dataSet>
 
 </merger>

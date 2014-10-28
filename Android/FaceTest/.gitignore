@@ -1,6 +1,29 @@
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
+# Android
+gen/
+build/
+ 
+# Gradle
+.gradle/
+local.properties
+ 
+# Old Android
+bin/
+ 
+# Idea
+*.iws
+*.iml
+*.ipr
+.idea
+out
+ 
+# Eclipse
+.project
+.classpath
+.settings
+ 
+# OSX
 .DS_Store
-/build
+ 
+# Generic
+*~
+.swp
