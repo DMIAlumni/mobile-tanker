@@ -30,8 +30,10 @@ public class FaceTest extends Activity implements CvCameraViewListener {
 
     private CameraBridgeViewBase openCvCameraView;
     private CascadeClassifier faceCascadeClassifier;
-    private CascadeClassifier eyeCascadeClassifier;
-    private CascadeClassifier smileCascadeClassifier;
+    //private CascadeClassifier eyeCascadeClassifier;
+    //private CascadeClassifier smileCascadeClassifier;
+    //private Mat ycbcrImage;
+    //private Mat hsvImage;
     private Mat grayscaleImage;
     private int absoluteFaceSize;
     private int centerCrossSize = 20;
@@ -41,6 +43,8 @@ public class FaceTest extends Activity implements CvCameraViewListener {
     private static final Scalar RED = new Scalar(255, 0, 0);
     private static final Scalar GREEN = new Scalar(0, 255, 0);
     private static final Scalar BLUE = new Scalar(0, 0, 255);
+    //Target is correctly aimed if x-pos of target center is ± AIM_DELTA from x-poss center of frame center
+    private static final int AIM_DELTA = 10;
 
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -77,9 +81,9 @@ public class FaceTest extends Activity implements CvCameraViewListener {
             // Load the cascade classifier
             faceCascadeClassifier = new CascadeClassifier(mCascadeFileF.getAbsolutePath());
             Log.e("FaceTest", "Face Cascade File loaded");
-
+            /*
             // Copy the Eye cascade file into a temp file so OpenCV can load it
-            InputStream ise = getResources().openRawResource(R.raw.haarcascade_righteye_2splits);
+            InputStream ise = getResources().openRawResource(R.raw.haarcascade_eye);
             File mCascadeFileE = new File(cascadeDir, "eyeDetection.xml");
             FileOutputStream ose = new FileOutputStream(mCascadeFileE);
             buffer = new byte[4096];
@@ -105,11 +109,10 @@ public class FaceTest extends Activity implements CvCameraViewListener {
             // Load the cascade classifier
             smileCascadeClassifier = new CascadeClassifier(mCascadeFileS.getAbsolutePath());
             Log.e("FaceTest", "smile Cascade File loaded");
+            */
         } catch (Exception e) {
             Log.e("FaceTest", "Error loading cascades", e);
         }
-
-
         // And we are ready to go
         openCvCameraView.enableView();
     }
@@ -119,20 +122,13 @@ public class FaceTest extends Activity implements CvCameraViewListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-
         //openCvCameraView = new JavaCameraView(this, -1);
-
-        //openCvCameraView=R.layout.facetest;
-
         //setContentView(openCvCameraView);
-        setContentView(R.layout.facetest);
-
         //openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_calibration_java_surface_view);
+        setContentView(R.layout.facetest);
         openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
-
         openCvCameraView.setVisibility(SurfaceView.VISIBLE);
         openCvCameraView.setCvCameraViewListener(this);
         openCvCameraView.getHolder().setFixedSize(960, 540);
@@ -144,10 +140,8 @@ public class FaceTest extends Activity implements CvCameraViewListener {
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        grayscaleImage = new Mat(height, width, CvType.CV_8UC4);
-
-
-        // The faces will be a 20% of the height of the screen
+        grayscaleImage = new Mat(height, width, CvType.CV_8UC1);
+        // The faces will be about a 20% of the height of the screen
         absoluteFaceSize = (int) (height * 0.2);
     }
 
@@ -161,24 +155,31 @@ public class FaceTest extends Activity implements CvCameraViewListener {
     public Mat onCameraFrame(Mat aInputFrame) {
         Scalar color;
         // Create a grayscale image
-        Imgproc.cvtColor(aInputFrame, grayscaleImage, Imgproc.COLOR_RGBA2RGB);
-
+        Imgproc.cvtColor(aInputFrame, grayscaleImage, Imgproc.COLOR_RGBA2GRAY);
+        //Imgproc.cvtColor(aInputFrame, grayscaleImage, Imgproc.COLOR_RGBA2RGB);
+        //Imgproc.cvtColor(aInputFrame, hsvImage, Imgproc.COLOR_RGB2HSV);
+        //Imgproc.cvtColor(aInputFrame, ycbcrImage, Imgproc.COLOR_RGB2YCrCb);
 
         MatOfRect faces = new MatOfRect();
 
-
         // Use the classifier to detect faces
         if (faceCascadeClassifier != null) {
-            faceCascadeClassifier.detectMultiScale(grayscaleImage, faces, 1.1, 2, 2,
+            faceCascadeClassifier.detectMultiScale(grayscaleImage, faces, 1.1, 6, 2,
                                                    new Size(absoluteFaceSize, absoluteFaceSize), new Size());
         }
 
-
-        // If there are any faces found, draw a rectangle around it
+        // If there are more than one face select the bigger (should be the closest)
         Rect[] facesArray = faces.toArray();
         target = null;
-        /*
         int targetArea = -1;
+        for (Rect face : facesArray) {
+            int faceArea = face.width * face.height;
+            if (faceArea > targetArea) {
+                targetArea = faceArea;
+                target = face;
+            }
+        }
+       /*
         for (int j = 0; j < facesArray.length; j++) {
             int faceArea = facesArray[j].width * facesArray[j].height;
             if (faceArea > targetArea) {
@@ -186,7 +187,8 @@ public class FaceTest extends Activity implements CvCameraViewListener {
                 target = facesArray[j];
             }
         }
-        */
+
+
         if (facesArray.length > 0) {
             for (Rect face : facesArray) {
                 //Create a submatrix containing the top half face
@@ -205,7 +207,19 @@ public class FaceTest extends Activity implements CvCameraViewListener {
                 }
             }
         }
-        for (int i = 0; i < facesArray.length; i++) {
+        */
+        if (facesArray.length > 0) {
+            for (Rect face : facesArray) {
+                if (face != target)
+                    color = GREEN;
+                else
+                    color = RED;
+                Core.rectangle(aInputFrame, face.tl(), face.br(), color, 3);
+                Core.line(aInputFrame, new Point(face.x + face.width, face.y), new Point(face.x, face.y + face.height), color, 3);
+                Core.line(aInputFrame, face.tl(), face.br(), color, 3);
+            }
+        }
+      /*  for (int i = 0; i < facesArray.length; i++) {
             if (facesArray[i] != target)
                 color = GREEN;
             else
@@ -213,7 +227,7 @@ public class FaceTest extends Activity implements CvCameraViewListener {
             Core.rectangle(aInputFrame, facesArray[i].tl(), facesArray[i].br(), color, 3);
             Core.line(aInputFrame, new Point(facesArray[i].x + facesArray[i].width, facesArray[i].y), new Point(facesArray[i].x, facesArray[i].y + facesArray[i].height), color, 3);
             Core.line(aInputFrame, facesArray[i].tl(), facesArray[i].br(), color, 3);
-        }
+        }*/
         Point frameCenter = new Point(aInputFrame.width() / 2, aInputFrame.height() / 2);
         Core.line(aInputFrame, new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
         Core.line(aInputFrame, new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
@@ -232,10 +246,10 @@ public class FaceTest extends Activity implements CvCameraViewListener {
                 if (target != null) {
                     textDirection.setVisibility(View.VISIBLE);
                     imageDirection.setVisibility(View.VISIBLE);
-                    if (frameCenter.x - (target.x + target.width / 2) > 10) {
+                    if (frameCenter.x - (target.x + target.width / 2) > AIM_DELTA) {
                         textDirection.setText("Turn Left");
                         imageDirection.setImageResource(R.drawable.right);
-                    } else if (frameCenter.x - (target.x + target.width / 2) < -10) {
+                    } else if (frameCenter.x - (target.x + target.width / 2) < -AIM_DELTA) {
                         imageDirection.setImageResource(R.drawable.left);
                         textDirection.setText("Turn Right");
                     } else {
