@@ -29,7 +29,9 @@ public class FaceTest extends Activity implements CvCameraViewListener {
 
 
     private CameraBridgeViewBase openCvCameraView;
-    private CascadeClassifier cascadeClassifier;
+    private CascadeClassifier faceCascadeClassifier;
+    private CascadeClassifier eyeCascadeClassifier;
+    private CascadeClassifier smileCascadeClassifier;
     private Mat grayscaleImage;
     private int absoluteFaceSize;
     private int centerCrossSize = 20;
@@ -57,29 +59,54 @@ public class FaceTest extends Activity implements CvCameraViewListener {
 
 
     private void initializeOpenCVDependencies() {
-
-
         try {
-            // Copy the resource into a temp file so OpenCV can load it
-            InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
+            // Copy the Face cascade file into a temp file so OpenCV can load it
+            InputStream isf = getResources().openRawResource(R.raw.lbpcascade_frontalface);
             File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-            File mCascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
-            FileOutputStream os = new FileOutputStream(mCascadeFile);
+            File mCascadeFileF = new File(cascadeDir, "faceDetection.xml");
+            FileOutputStream osf = new FileOutputStream(mCascadeFileF);
 
 
             byte[] buffer = new byte[4096];
             int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-                os.write(buffer, 0, bytesRead);
+            while ((bytesRead = isf.read(buffer)) != -1) {
+                osf.write(buffer, 0, bytesRead);
             }
-            is.close();
-            os.close();
-
-
+            isf.close();
+            osf.close();
             // Load the cascade classifier
-            cascadeClassifier = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+            faceCascadeClassifier = new CascadeClassifier(mCascadeFileF.getAbsolutePath());
+            Log.e("FaceTest", "Face Cascade File loaded");
+
+            // Copy the Eye cascade file into a temp file so OpenCV can load it
+            InputStream ise = getResources().openRawResource(R.raw.haarcascade_righteye_2splits);
+            File mCascadeFileE = new File(cascadeDir, "eyeDetection.xml");
+            FileOutputStream ose = new FileOutputStream(mCascadeFileE);
+            buffer = new byte[4096];
+            while ((bytesRead = ise.read(buffer)) != -1) {
+                ose.write(buffer, 0, bytesRead);
+            }
+            ise.close();
+            ose.close();
+            // Load the cascade classifier
+            eyeCascadeClassifier = new CascadeClassifier(mCascadeFileE.getAbsolutePath());
+            Log.e("FaceTest", "eye Cascade File loaded");
+
+            // Copy the Smile cascade file into a temp file so OpenCV can load it
+            InputStream iss = getResources().openRawResource(R.raw.haarcascade_smile);
+            File mCascadeFileS = new File(cascadeDir, "smileDetection.xml");
+            FileOutputStream oss = new FileOutputStream(mCascadeFileS);
+            buffer = new byte[4096];
+            while ((bytesRead = iss.read(buffer)) != -1) {
+                oss.write(buffer, 0, bytesRead);
+            }
+            iss.close();
+            oss.close();
+            // Load the cascade classifier
+            smileCascadeClassifier = new CascadeClassifier(mCascadeFileS.getAbsolutePath());
+            Log.e("FaceTest", "smile Cascade File loaded");
         } catch (Exception e) {
-            Log.e("FaceTest", "Error loading cascade", e);
+            Log.e("FaceTest", "Error loading cascades", e);
         }
 
 
@@ -141,15 +168,16 @@ public class FaceTest extends Activity implements CvCameraViewListener {
 
 
         // Use the classifier to detect faces
-        if (cascadeClassifier != null) {
-            cascadeClassifier.detectMultiScale(grayscaleImage, faces, 1.1, 2, 2,
-                                               new Size(absoluteFaceSize, absoluteFaceSize), new Size());
+        if (faceCascadeClassifier != null) {
+            faceCascadeClassifier.detectMultiScale(grayscaleImage, faces, 1.1, 2, 2,
+                                                   new Size(absoluteFaceSize, absoluteFaceSize), new Size());
         }
 
 
         // If there are any faces found, draw a rectangle around it
         Rect[] facesArray = faces.toArray();
-        target=null;
+        target = null;
+        /*
         int targetArea = -1;
         for (int j = 0; j < facesArray.length; j++) {
             int faceArea = facesArray[j].width * facesArray[j].height;
@@ -158,12 +186,30 @@ public class FaceTest extends Activity implements CvCameraViewListener {
                 target = facesArray[j];
             }
         }
+        */
+        if (facesArray.length > 0) {
+            for (Rect face : facesArray) {
+                //Create a submatrix containing the top half face
+                Mat faceImage = grayscaleImage.submat(face.y, face.y + face.height/2,face.x, face.x + face.width);
+                // Mat faceImage = grayscaleImage.rowRange(face.y, face.y + face.width).colRange(face.x, face.x + face.width);
 
+                //eyeCascadeClassifier.detectMultiScale(faceImage, eyes, 1.03, 2, 3, new Size(1, 1), new Size(100,100));
+                MatOfRect eyes = new MatOfRect();
+                eyeCascadeClassifier.detectMultiScale(faceImage, eyes, 1.1, 3, 3, new Size(15, 15), new Size(100,100));
+
+                Rect[] eyesArray = eyes.toArray();
+                if (eyesArray.length > 0) {
+                    for (Rect eye : eyesArray) {
+                        Core.circle(aInputFrame, new Point(face.x+eye.x + eye.width / 2, face.y+eye.y + eye.height / 2), eye.width / 2, BLUE, 3);
+                    }
+                }
+            }
+        }
         for (int i = 0; i < facesArray.length; i++) {
             if (facesArray[i] != target)
-              color=GREEN;
+                color = GREEN;
             else
-                color=RED;
+                color = RED;
             Core.rectangle(aInputFrame, facesArray[i].tl(), facesArray[i].br(), color, 3);
             Core.line(aInputFrame, new Point(facesArray[i].x + facesArray[i].width, facesArray[i].y), new Point(facesArray[i].x, facesArray[i].y + facesArray[i].height), color, 3);
             Core.line(aInputFrame, facesArray[i].tl(), facesArray[i].br(), color, 3);
