@@ -1,0 +1,33 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="me.mariotti.udoomobiletanker">
+
+    <application android:allowBackup="true"
+                 android:label="@string/app_name"
+                 android:icon="@drawable/ic_launcher"
+                 android:theme="@style/AppTheme">
+        <activity
+                android:name=".OpenCVActivity"
+                android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"/>
+            </intent-filter>
+            <meta-data
+                    android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
+                    android:resource="@xml/usb_accessory_filter"/>
+
+        </activity>
+    </application>
+    <supports-screens android:resizeable="true" android:smallScreens="true" android:normalScreens="true"
+                      android:largeScreens="true" android:anyDensity="true"/>
+    <uses-sdk android:minSdkVersion="18"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front.autofocus" android:required="false"/>
+    <uses-feature android:name="android.hardware.usb.accessory" android:required="true"/>
+</manifest>
