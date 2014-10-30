@@ -2,38 +2,36 @@ package me.mariotti.udoomobiletanker;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 import me.palazzetti.adktoolkit.AdkManager;
 
-import java.io.InputStream;
 
 /**
  * Created by simone on 30/10/14.
  */
-public class Communicator extends AsyncTask<Void, Void, Void> {
-    private OpenCVActivity mActivity;
+public class Communicator extends AsyncTask<TankerActivity, String, Void> {
+    private final String TAG = "Communicator";
+    private TankerActivity mActivity;
     private String mIncoming, mOutocoming;
     private AdkManager mArduino;
     boolean mKeepAlive = true;
 
-    public Communicator(OpenCVActivity mActivity) {
+    public Communicator(TankerActivity mActivity) {
         this.mActivity = mActivity;
-        mArduino = mActivity.arduino;
+        mArduino = mActivity.mArduino;
     }
 
     @Override
-    protected void onProgressUpdate(Void... values) {
+    protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
+    protected Void doInBackground(TankerActivity... params) {
         while (mKeepAlive) {
             try {
-                mArduino.writeSerial("1");
+                mArduino.writeSerial(getOutocoming());
             } catch (Exception ex) {
-                Log.e("TEST", ex.getMessage());
+                Log.e(TAG, ex.getMessage());
             }
         }
         return null;
@@ -53,5 +51,9 @@ public class Communicator extends AsyncTask<Void, Void, Void> {
 
     synchronized public void setOutocoming(String outocoming) {
         this.mOutocoming = outocoming;
+    }
+
+    public void setmKeepAlive(boolean mKeepAlive) {
+        this.mKeepAlive = mKeepAlive;
     }
 }

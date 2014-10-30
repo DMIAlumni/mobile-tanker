@@ -29,13 +29,13 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 
-public class OpenCVActivity extends Activity implements CvCameraViewListener {
+public class TankerActivity extends Activity implements CvCameraViewListener {
 
 
     private CameraBridgeViewBase openCvCameraView;
     private CascadeClassifier faceCascadeClassifier;
-    public Communicator msgCenter;
-    public AdkManager arduino;
+    public Communicator mCommunicator;
+    public AdkManager mArduino;
     private Mat grayscaleImage;
     private int absoluteFaceSize;
     private int centerCrossSize = 20;
@@ -82,9 +82,9 @@ public class OpenCVActivity extends Activity implements CvCameraViewListener {
             osf.close();
             // Load the cascade classifier
             faceCascadeClassifier = new CascadeClassifier(mCascadeFileF.getAbsolutePath());
-            Log.i("OpenCVActivity", "Face Cascade File loaded");
+            Log.i("TankerActivity", "Face Cascade File loaded");
         } catch (Exception e) {
-            Log.i("OpenCVActivity", "Error loading cascades", e);
+            Log.i("TankerActivity", "Error loading cascades", e);
         }
         // And we are ready to go
         openCvCameraView.enableView();
@@ -99,10 +99,10 @@ public class OpenCVActivity extends Activity implements CvCameraViewListener {
 
         setContentView(R.layout.facetest);
 
-        arduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
-        msgCenter = new Communicator(this);
+        mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
+        mCommunicator = new Communicator(this);
 
-        //msgCenter.setOutocoming(String.valueOf(1));
+        mCommunicator.setOutocoming(String.valueOf(1));
 
         openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         openCvCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -203,14 +203,16 @@ public class OpenCVActivity extends Activity implements CvCameraViewListener {
     @Override
     protected void onPause() {
         super.onPause();
-        arduino.close();
+        mCommunicator.setmKeepAlive(false);
+        mArduino.close();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
-        arduino.open();
-        msgCenter.execute();
+        mArduino.open();
+        mCommunicator.setmKeepAlive(true);
+        mCommunicator.execute();
     }
 }
