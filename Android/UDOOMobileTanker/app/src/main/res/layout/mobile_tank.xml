@@ -21,14 +21,24 @@
         <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/imageView" android:layout_gravity="center"
+                android:id="@+id/DirectionsImageView" android:layout_gravity="center"
                 android:contentDescription="Command"/>
         <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="Large Text"
-                android:id="@+id/textView" android:layout_gravity="center"/>
+                android:id="@+id/DirectionsTextView" android:layout_gravity="center"/>
+        <ScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/scrollView">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LOG\n"
+                    android:id="@+id/LogTextView"/>
+        </ScrollView>
     </LinearLayout>
 
 </LinearLayout>

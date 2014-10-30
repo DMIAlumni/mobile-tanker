@@ -13,6 +13,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import me.palazzetti.adktoolkit.AdkManager;
 import org.opencv.android.BaseLoaderCallback;
@@ -29,9 +30,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 
-public class TankerActivity extends Activity implements CvCameraViewListener {
+public class TankActivity extends Activity implements CvCameraViewListener {
 
-
+    private final String TAG = "TankActivity";
     private CameraBridgeViewBase openCvCameraView;
     private CascadeClassifier faceCascadeClassifier;
     public Communicator mCommunicator;
@@ -47,7 +48,6 @@ public class TankerActivity extends Activity implements CvCameraViewListener {
     private static final Scalar BLUE = new Scalar(0, 0, 255);
     //Target is correctly aimed if x-pos of target center is ± AIM_DELTA from x-poss center of frame center
     private static final int AIM_DELTA = 10;
-
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -82,9 +82,9 @@ public class TankerActivity extends Activity implements CvCameraViewListener {
             osf.close();
             // Load the cascade classifier
             faceCascadeClassifier = new CascadeClassifier(mCascadeFileF.getAbsolutePath());
-            Log.i("TankerActivity", "Face Cascade File loaded");
+            Log.i(TAG, "Face Cascade File loaded");
         } catch (Exception e) {
-            Log.i("TankerActivity", "Error loading cascades", e);
+            Log.e(TAG, "Error loading cascades", e);
         }
         // And we are ready to go
         openCvCameraView.enableView();
@@ -97,20 +97,27 @@ public class TankerActivity extends Activity implements CvCameraViewListener {
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        setContentView(R.layout.facetest);
+        setContentView(R.layout.mobile_tank);
+        final ScrollView mScrollLog = (ScrollView) findViewById(R.id.scrollView);
+                mScrollLog.post(new Runnable() {
 
+            @Override
+            public void run() {
+                mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
+            }
+        });
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
         mCommunicator = new Communicator(this);
 
-        mCommunicator.setOutocoming(String.valueOf(1));
+
 
         openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         openCvCameraView.setVisibility(SurfaceView.VISIBLE);
         openCvCameraView.setCvCameraViewListener(this);
         openCvCameraView.getHolder().setFixedSize(960, 540);
-        imageDirection = (ImageView) findViewById(R.id.imageView);
+        imageDirection = (ImageView) findViewById(R.id.DirectionsImageView);
         imageDirection.setImageResource(R.drawable.ok);
-        textDirection = (TextView) findViewById(R.id.textView);
+        textDirection = (TextView) findViewById(R.id.DirectionsTextView);
     }
 
     @Override
@@ -126,6 +133,7 @@ public class TankerActivity extends Activity implements CvCameraViewListener {
 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
+
         Scalar color;
         // Create a grayscale image
         Imgproc.cvtColor(aInputFrame, grayscaleImage, Imgproc.COLOR_RGBA2GRAY);

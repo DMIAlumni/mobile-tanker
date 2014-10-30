@@ -2,34 +2,48 @@ package me.mariotti.udoomobiletanker;
 
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.TextView;
 import me.palazzetti.adktoolkit.AdkManager;
 
 
 /**
  * Created by simone on 30/10/14.
  */
-public class Communicator extends AsyncTask<TankerActivity, String, Void> {
+public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private final String TAG = "Communicator";
-    private TankerActivity mActivity;
-    private String mIncoming, mOutocoming;
+    private TankActivity mActivity;
+    private TextView mLogTextView;
+    private String mIncoming, mOutocoming = "0", mLastIncome, mLastOutcome = "";
     private AdkManager mArduino;
     boolean mKeepAlive = true;
 
-    public Communicator(TankerActivity mActivity) {
+    public Communicator(TankActivity mActivity) {
         this.mActivity = mActivity;
         mArduino = mActivity.mArduino;
+        mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
     }
 
     @Override
     protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
+        mLogTextView.append(values[0] + '\n');
     }
 
     @Override
-    protected Void doInBackground(TankerActivity... params) {
+    protected Void doInBackground(TankActivity... params) {
+        //int d = 0;
         while (mKeepAlive) {
+            /*if (d < 100) {
+                d++;
+                setOutocoming(String.valueOf(d));
+            }*/
             try {
-                mArduino.writeSerial(getOutocoming());
+                String mCurrentOutcome = getOutocoming();
+                if (!mLastOutcome.equals(mCurrentOutcome)) {
+                    publishProgress("Sending: " + mCurrentOutcome);
+                    mLastOutcome = mCurrentOutcome;
+                }
+                mArduino.writeSerial(mCurrentOutcome);
             } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage());
             }
