@@ -10,7 +10,6 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.ScrollView;
 import me.mariotti.opencv.TargetSearch;
@@ -20,8 +19,8 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.*;
-import org.opencv.imgproc.Imgproc;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
 import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
@@ -32,11 +31,10 @@ import java.io.InputStream;
 public class TankActivity extends Activity implements CvCameraViewListener {
 
     private final String TAG = "TankActivity";
-    private CameraBridgeViewBase openCvCameraView;
-    private CascadeClassifier faceCascadeClassifier;
+    private CameraBridgeViewBase mOpenCvCameraView;
+    private CascadeClassifier mFaceCascadeClassifier;
     public Communicator mCommunicator;
     public AdkManager mArduino;
-    private Mat grayscaleImage;
     private TargetSearch mTargetSearch;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -56,29 +54,26 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     private void initializeOpenCVDependencies() {
         try {
             // Copy the Face cascade file into a temp file so OpenCV can load it
-            InputStream isf = getResources().openRawResource(R.raw.lbpcascade_frontalface);
-            File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-            File mCascadeFileF = new File(cascadeDir, "faceDetection.xml");
-            FileOutputStream osf = new FileOutputStream(mCascadeFileF);
-
-
+            InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
+            File mCascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+            File mCascadeFileF = new File(mCascadeDir, "faceDetection.xml");
+            FileOutputStream os = new FileOutputStream(mCascadeFileF);
             byte[] buffer = new byte[4096];
             int bytesRead;
-            while ((bytesRead = isf.read(buffer)) != -1) {
-                osf.write(buffer, 0, bytesRead);
+            while ((bytesRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
             }
-            isf.close();
-            osf.close();
+            is.close();
+            os.close();
             // Load the cascade classifier
-            faceCascadeClassifier = new CascadeClassifier(mCascadeFileF.getAbsolutePath());
+            mFaceCascadeClassifier = new CascadeClassifier(mCascadeFileF.getAbsolutePath());
             Log.i(TAG, "Face Cascade File loaded");
         } catch (Exception e) {
             Log.e(TAG, "Error loading cascades", e);
         }
         // And we are ready to go
-        openCvCameraView.enableView();
+        mOpenCvCameraView.enableView();
     }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,15 +82,15 @@ public class TankActivity extends Activity implements CvCameraViewListener {
         setContentView(R.layout.mobile_tank);
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
         mCommunicator = new Communicator(this);
-        openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
-        openCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        openCvCameraView.setCvCameraViewListener(this);
-        openCvCameraView.getHolder().setFixedSize(960, 540);
+        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+        mOpenCvCameraView.setCvCameraViewListener(this);
+        mOpenCvCameraView.getHolder().setFixedSize(960, 540);
     }
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        mTargetSearch.setGrayscaleImage(new Mat(height, width, CvType.CV_8UC1));
+        mTargetSearch.setmGrayscaleImage(new Mat(height, width, CvType.CV_8UC1));
         // The faces will be about a 20% of the height of the screen
         mTargetSearch.setAbsoluteFaceSize((int) (height * 0.2));
     }
@@ -106,7 +101,7 @@ public class TankActivity extends Activity implements CvCameraViewListener {
 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
-        return mTargetSearch.AnalyzeFrame(aInputFrame, faceCascadeClassifier);
+        return mTargetSearch.AnalyzeFrame(aInputFrame, mFaceCascadeClassifier);
     }
 
     @Override
@@ -126,7 +121,7 @@ public class TankActivity extends Activity implements CvCameraViewListener {
             public void run() {
                 mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
             }
-        },100);
+        }, 100);
     }
 
     @Override

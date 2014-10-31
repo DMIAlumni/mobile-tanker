@@ -13,53 +13,54 @@ import org.opencv.objdetect.CascadeClassifier;
  * Created by simone on 31/10/14.
  */
 public class TargetSearch {
+    private final String TAG = "TargetSearch";
     private TankActivity mTankActivity;
-    private Mat grayscaleImage;
+    private Mat mGrayscaleImage;
     private int absoluteFaceSize,centerCrossSize = 20;
-    private ImageView imageDirection;
-    private TextView textDirection;
-    private Rect target;
+    private ImageView mImageDirection;
+    private TextView mTextDirection;
+    private Rect mTarget;
     private static final Scalar RED = new Scalar(255, 0, 0);
     private static final Scalar GREEN = new Scalar(0, 255, 0);
     private static final Scalar BLUE = new Scalar(0, 0, 255);
-    //Target is correctly aimed if x-pos of target center is ± AIM_DELTA from x-poss center of frame center
+    //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
     private static final int AIM_DELTA = 10;
 
     public TargetSearch(TankActivity mTankActivity) {
         this.mTankActivity=mTankActivity;
-        imageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
-        imageDirection.setImageResource(R.drawable.ok);
-        textDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
+        mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
+        mImageDirection.setImageResource(R.drawable.ok);
+        mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
 
     }
     public Mat AnalyzeFrame(Mat mIncomingFrame, CascadeClassifier faceCascadeClassifier){
         Scalar color;
         // Create a grayscale version of the image
-        Imgproc.cvtColor(mIncomingFrame, grayscaleImage, Imgproc.COLOR_RGBA2GRAY);
+        Imgproc.cvtColor(mIncomingFrame, mGrayscaleImage, Imgproc.COLOR_RGBA2GRAY);
 
         MatOfRect faces = new MatOfRect();
 
         // Use the classifier to detect faces
         if (faceCascadeClassifier != null) {
-            faceCascadeClassifier.detectMultiScale(grayscaleImage, faces, 1.1, 6, 2,
+            faceCascadeClassifier.detectMultiScale(mGrayscaleImage, faces, 1.1, 6, 2,
                                                    new Size(absoluteFaceSize, absoluteFaceSize), new Size());
         }
 
         // If there are more than one face select the bigger (should be the closest)
         Rect[] facesArray = faces.toArray();
-        target = null;
+        mTarget = null;
         int targetArea = -1;
         for (Rect face : facesArray) {
             int faceArea = face.width * face.height;
             if (faceArea > targetArea) {
                 targetArea = faceArea;
-                target = face;
+                mTarget = face;
             }
         }
 
         if (facesArray.length > 0) {
             for (Rect face : facesArray) {
-                if (face != target)
+                if (face != mTarget)
                     color = GREEN;
                 else
                     color = RED;
@@ -74,42 +75,42 @@ public class TargetSearch {
         Core.line(mIncomingFrame, new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
 
         class updateDirections implements Runnable {
-            Rect target;
+            Rect mTarget;
             Point frameCenter;
 
-            updateDirections(Rect target, Point frameCenter) {
-                this.target = target;
-                this.frameCenter = frameCenter;
+            updateDirections(Rect mTarget, Point mFrameCenter) {
+                this.mTarget = mTarget;
+                this.frameCenter = mFrameCenter;
             }
 
             public void run() {
-                if (target != null) {
-                    textDirection.setVisibility(View.VISIBLE);
-                    imageDirection.setVisibility(View.VISIBLE);
-                    if (frameCenter.x - (target.x + target.width / 2) > AIM_DELTA) {
-                        textDirection.setText("Turn Left");
-                        imageDirection.setImageResource(R.drawable.right);
-                    } else if (frameCenter.x - (target.x + target.width / 2) < -AIM_DELTA) {
-                        imageDirection.setImageResource(R.drawable.left);
-                        textDirection.setText("Turn Right");
+                if (mTarget != null) {
+                    mTextDirection.setVisibility(View.VISIBLE);
+                    mImageDirection.setVisibility(View.VISIBLE);
+                    if (frameCenter.x - (mTarget.x + mTarget.width / 2) > AIM_DELTA) {
+                        mTextDirection.setText("Turn Left");
+                        mImageDirection.setImageResource(R.drawable.right);
+                    } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < -AIM_DELTA) {
+                        mImageDirection.setImageResource(R.drawable.left);
+                        mTextDirection.setText("Turn Right");
                     } else {
-                        imageDirection.setImageResource(R.drawable.ok);
-                        textDirection.setText("STOP!");
+                        mImageDirection.setImageResource(R.drawable.ok);
+                        mTextDirection.setText("STOP!");
                     }
                 } else {
-                    textDirection.setVisibility(View.INVISIBLE);
-                    imageDirection.setVisibility(View.INVISIBLE);
+                    mTextDirection.setVisibility(View.INVISIBLE);
+                    mImageDirection.setVisibility(View.INVISIBLE);
                 }
             }
         }
-        mTankActivity.runOnUiThread(new updateDirections(target, frameCenter));
+        mTankActivity.runOnUiThread(new updateDirections(mTarget, frameCenter));
         return mIncomingFrame;
     }
     public void setAbsoluteFaceSize(int absoluteFaceSize) {
         this.absoluteFaceSize = absoluteFaceSize;
     }
-    public void setGrayscaleImage(Mat grayscaleImage) {
-        this.grayscaleImage = grayscaleImage;
+    public void setmGrayscaleImage(Mat mGrayscaleImage) {
+        this.mGrayscaleImage = mGrayscaleImage;
     }
 
 }

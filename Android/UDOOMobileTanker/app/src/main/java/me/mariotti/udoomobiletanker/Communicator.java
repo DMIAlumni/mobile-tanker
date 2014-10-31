@@ -5,20 +5,24 @@ import android.util.Log;
 import android.widget.TextView;
 import me.palazzetti.adktoolkit.AdkManager;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 /**
  * Created by simone on 30/10/14.
  */
 public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private final String TAG = "Communicator";
-    private TankActivity mActivity;
+    //private TankActivity mActivity;
     private TextView mLogTextView;
-    private String mIncoming, mOutocoming = "0", mLastIncome, mLastOutcome = "";
+    private String mIncoming, mOutgoing = "0", mLastIncome, mLastSent = "";
     private AdkManager mArduino;
     boolean mKeepAlive = true;
 
     public Communicator(TankActivity mActivity) {
-        this.mActivity = mActivity;
+        //this.mActivity = mActivity;
         mArduino = mActivity.mArduino;
         mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
     }
@@ -31,15 +35,17 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
 
     @Override
     protected Void doInBackground(TankActivity... params) {
+        DateFormat mDateFormat = new SimpleDateFormat("HH:mm:ss.S");
         while (mKeepAlive) {
            try {
-                String mCurrentOutcome = getOutocoming();
-                if (true || !mLastOutcome.equals(mCurrentOutcome)) {
-                    publishProgress("Sending: " + mCurrentOutcome);
-                    mLastOutcome = mCurrentOutcome;
-
+                String mSending = getOutgoing();
+                if (!mLastSent.equals(mSending)) {
+                    //get current date time with Date()
+                    Date mDate = new Date();
+                    publishProgress(mDateFormat.format(mDate)+" | Sending: " + mSending);
+                    mLastSent = mSending;
                 }
-               mArduino.writeSerial(mCurrentOutcome);
+               mArduino.writeSerial(mSending);
             } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage());
             }
@@ -51,19 +57,19 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
         return mIncoming;
     }
 
-    synchronized private String getOutocoming() {
-        return mOutocoming;
+    synchronized private String getOutgoing() {
+        return mOutgoing;
     }
 
     synchronized private void setIncoming(String incoming) {
         this.mIncoming = incoming;
     }
 
-    synchronized public void setOutocoming(String outocoming) {
-        this.mOutocoming = outocoming;
+    synchronized public void setOutgoing(String outgoing) {
+        this.mOutgoing = outgoing;
     }
 
-    public void setmKeepAlive(boolean mKeepAlive) {
+    public void setKeepAlive(boolean mKeepAlive) {
         this.mKeepAlive = mKeepAlive;
     }
 }
