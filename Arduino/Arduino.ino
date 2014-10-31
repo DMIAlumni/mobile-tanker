@@ -44,9 +44,20 @@ void readingFromADK() {
   if (adk.isReady()) {
     adk.read(&bytesRead, BUFFSIZE, buffer);
     if (bytesRead > 0) {
-      Serial.println("Comando");
-      //eepCommandInterpreter(extractMovement(), extractSpeed());
-      Serial.println(buffer[0]);
+      for (int i = 0; i < bytesRead; i++) {
+        if (buffer[i]>=48 && buffer[i]<=47)
+        Serial.print(buffer[i]-48);
+        else
+        Serial.print((char)buffer[i]);
+        Serial.print("-");
+        //eepCommandInterpreter(extractMovement(), extractSpeed());
+
+        //eepCommandInterpreter(extractMovement(), extractSpeed());
+
+
+      }	Serial.print("RECEIVED FROM USB: ");
+      	Serial.println(*(uint32_t*)buffer);
+    
     }
   }
 }

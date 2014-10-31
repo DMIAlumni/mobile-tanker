@@ -31,19 +31,15 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
 
     @Override
     protected Void doInBackground(TankActivity... params) {
-        //int d = 0;
         while (mKeepAlive) {
-            /*if (d < 100) {
-                d++;
-                setOutocoming(String.valueOf(d));
-            }*/
-            try {
+           try {
                 String mCurrentOutcome = getOutocoming();
-                if (!mLastOutcome.equals(mCurrentOutcome)) {
+                if (true || !mLastOutcome.equals(mCurrentOutcome)) {
                     publishProgress("Sending: " + mCurrentOutcome);
                     mLastOutcome = mCurrentOutcome;
+
                 }
-                mArduino.writeSerial(mCurrentOutcome);
+               mArduino.writeSerial(mCurrentOutcome);
             } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage());
             }

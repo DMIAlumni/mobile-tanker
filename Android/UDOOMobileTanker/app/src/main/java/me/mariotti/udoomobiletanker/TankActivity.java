@@ -222,5 +222,10 @@ public class TankActivity extends Activity implements CvCameraViewListener {
         mArduino.open();
         mCommunicator.setmKeepAlive(true);
         mCommunicator.execute();
+        int d=0;
+        while (d < 255) {
+            d++;
+            mCommunicator.setOutocoming(String.valueOf(d)+"!"+":");
+        } mCommunicator.setmKeepAlive(false);
     }
 }
