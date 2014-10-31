@@ -12,9 +12,8 @@ import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.ScrollView;
-import android.widget.TextView;
+import me.mariotti.opencv.TargetSearch;
 import me.palazzetti.adktoolkit.AdkManager;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -38,17 +37,7 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     public Communicator mCommunicator;
     public AdkManager mArduino;
     private Mat grayscaleImage;
-    private int absoluteFaceSize;
-    private int centerCrossSize = 20;
-    private ImageView imageDirection;
-    private TextView textDirection;
-    private Rect target;
-    private static final Scalar RED = new Scalar(255, 0, 0);
-    private static final Scalar GREEN = new Scalar(0, 255, 0);
-    private static final Scalar BLUE = new Scalar(0, 0, 255);
-    //Target is correctly aimed if x-pos of target center is ± AIM_DELTA from x-poss center of frame center
-    private static final int AIM_DELTA = 10;
-
+    private TargetSearch mTargetSearch;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -94,37 +83,21 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         setContentView(R.layout.mobile_tank);
-        final ScrollView mScrollLog = (ScrollView) findViewById(R.id.scrollView);
-                mScrollLog.post(new Runnable() {
-
-            @Override
-            public void run() {
-                mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
-            }
-        });
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
         mCommunicator = new Communicator(this);
-
-
-
         openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         openCvCameraView.setVisibility(SurfaceView.VISIBLE);
         openCvCameraView.setCvCameraViewListener(this);
         openCvCameraView.getHolder().setFixedSize(960, 540);
-        imageDirection = (ImageView) findViewById(R.id.DirectionsImageView);
-        imageDirection.setImageResource(R.drawable.ok);
-        textDirection = (TextView) findViewById(R.id.DirectionsTextView);
     }
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        grayscaleImage = new Mat(height, width, CvType.CV_8UC1);
+        mTargetSearch.setGrayscaleImage(new Mat(height, width, CvType.CV_8UC1));
         // The faces will be about a 20% of the height of the screen
-        absoluteFaceSize = (int) (height * 0.2);
+        mTargetSearch.setAbsoluteFaceSize((int) (height * 0.2));
     }
 
     @Override
@@ -133,99 +106,36 @@ public class TankActivity extends Activity implements CvCameraViewListener {
 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
-
-        Scalar color;
-        // Create a grayscale image
-        Imgproc.cvtColor(aInputFrame, grayscaleImage, Imgproc.COLOR_RGBA2GRAY);
-
-        MatOfRect faces = new MatOfRect();
-
-        // Use the classifier to detect faces
-        if (faceCascadeClassifier != null) {
-            faceCascadeClassifier.detectMultiScale(grayscaleImage, faces, 1.1, 6, 2,
-                                                   new Size(absoluteFaceSize, absoluteFaceSize), new Size());
-        }
-
-        // If there are more than one face select the bigger (should be the closest)
-        Rect[] facesArray = faces.toArray();
-        target = null;
-        int targetArea = -1;
-        for (Rect face : facesArray) {
-            int faceArea = face.width * face.height;
-            if (faceArea > targetArea) {
-                targetArea = faceArea;
-                target = face;
-            }
-        }
-
-        if (facesArray.length > 0) {
-            for (Rect face : facesArray) {
-                if (face != target)
-                    color = GREEN;
-                else
-                    color = RED;
-                Core.rectangle(aInputFrame, face.tl(), face.br(), color, 3);
-                Core.line(aInputFrame, new Point(face.x + face.width, face.y), new Point(face.x, face.y + face.height), color, 3);
-                Core.line(aInputFrame, face.tl(), face.br(), color, 3);
-            }
-        }
-
-        Point frameCenter = new Point(aInputFrame.width() / 2, aInputFrame.height() / 2);
-        Core.line(aInputFrame, new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
-        Core.line(aInputFrame, new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
-
-
-        class updateDirections implements Runnable {
-            Rect target;
-            Point frameCenter;
-
-            updateDirections(Rect target, Point frameCenter) {
-                this.target = target;
-                this.frameCenter = frameCenter;
-            }
-
-            public void run() {
-                if (target != null) {
-                    textDirection.setVisibility(View.VISIBLE);
-                    imageDirection.setVisibility(View.VISIBLE);
-                    if (frameCenter.x - (target.x + target.width / 2) > AIM_DELTA) {
-                        textDirection.setText("Turn Left");
-                        imageDirection.setImageResource(R.drawable.right);
-                    } else if (frameCenter.x - (target.x + target.width / 2) < -AIM_DELTA) {
-                        imageDirection.setImageResource(R.drawable.left);
-                        textDirection.setText("Turn Right");
-                    } else {
-                        imageDirection.setImageResource(R.drawable.ok);
-                        textDirection.setText("STOP!");
-                    }
-                } else {
-                    textDirection.setVisibility(View.INVISIBLE);
-                    imageDirection.setVisibility(View.INVISIBLE);
-                }
-            }
-        }
-        runOnUiThread(new updateDirections(target, frameCenter));
-        return aInputFrame;
+        return mTargetSearch.AnalyzeFrame(aInputFrame, faceCascadeClassifier);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mCommunicator.setmKeepAlive(false);
+        mCommunicator.setKeepAlive(false);
         mArduino.close();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        final ScrollView mScrollLog = (ScrollView) findViewById(R.id.scrollView);
+        mScrollLog.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
+            }
+        },100);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
+        mTargetSearch = new TargetSearch(this);
         mArduino.open();
-        mCommunicator.setmKeepAlive(true);
+        mCommunicator.setKeepAlive(true);
         mCommunicator.execute();
-        int d=0;
-        while (d < 255) {
-            d++;
-            mCommunicator.setOutocoming(String.valueOf(d)+"!"+":");
-        } mCommunicator.setmKeepAlive(false);
     }
 }
