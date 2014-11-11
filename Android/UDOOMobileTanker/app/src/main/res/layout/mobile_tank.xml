@@ -37,7 +37,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="LOG\n"
-                    android:id="@+id/LogTextView"/>
+                    android:id="@+id/LogTextView"
+                    android:layout_gravity="bottom"/>
         </ScrollView>
     </LinearLayout>
 

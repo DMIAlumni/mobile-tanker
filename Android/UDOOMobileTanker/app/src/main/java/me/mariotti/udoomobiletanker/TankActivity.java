@@ -36,6 +36,7 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     public Communicator mCommunicator;
     public AdkManager mArduino;
     private TargetSearch mTargetSearch;
+    public TankLogic mTankLogic;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -81,7 +82,9 @@ public class TankActivity extends Activity implements CvCameraViewListener {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.mobile_tank);
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
+
         mCommunicator = new Communicator(this);
+        mTankLogic=new TankLogic(mCommunicator);
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
@@ -115,13 +118,11 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     protected void onStart() {
         super.onStart();
         final ScrollView mScrollLog = (ScrollView) findViewById(R.id.scrollView);
-        mScrollLog.postDelayed(new Runnable() {
-
-            @Override
+        mScrollLog.post(new Runnable() {
             public void run() {
-                mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
+                mScrollLog.scrollTo(0, mScrollLog.getBottom());
             }
-        }, 100);
+        });
     }
 
     @Override

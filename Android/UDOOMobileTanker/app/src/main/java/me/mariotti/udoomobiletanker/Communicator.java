@@ -8,6 +8,7 @@ import me.palazzetti.adktoolkit.AdkManager;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Observable;
 
 
 /**
@@ -20,11 +21,13 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private String mIncoming, mOutgoing = "0", mLastIncome, mLastSent = "";
     private AdkManager mArduino;
     boolean mKeepAlive = true;
+    IncomingMessage mIncomingMessageObservable;
 
     public Communicator(TankActivity mActivity) {
         //this.mActivity = mActivity;
         mArduino = mActivity.mArduino;
         mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
+        mIncomingMessageObservable = new IncomingMessage();
     }
 
     @Override
@@ -37,15 +40,15 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     protected Void doInBackground(TankActivity... params) {
         DateFormat mDateFormat = new SimpleDateFormat("HH:mm:ss.S");
         while (mKeepAlive) {
-           try {
+            try {
                 String mSending = getOutgoing();
                 if (!mLastSent.equals(mSending)) {
                     //get current date time with Date()
                     Date mDate = new Date();
-                    publishProgress(mDateFormat.format(mDate)+" | Sending: " + mSending);
+                    publishProgress(mDateFormat.format(mDate) + " | Sending: " + mSending);
                     mLastSent = mSending;
                 }
-               mArduino.writeSerial(mSending);
+                mArduino.writeSerial(mSending);
             } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage());
             }
@@ -53,8 +56,29 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
         return null;
     }
 
+    //This is just an Observable wrapper for the incoming message
+    class IncomingMessage extends Observable {
+        private String message = "";
+
+        public void setIncoming(String incoming) {
+            message = incoming;
+            triggerObservers();
+        }
+        public String getIncoming(){
+            return message;
+        }
+
+        private void triggerObservers() {
+            setChanged();
+            notifyObservers();
+        }
+
+    }
+
+
+
     synchronized public String getIncoming() {
-        return mIncoming;
+        return mIncomingMessageObservable.getIncoming();
     }
 
     synchronized private String getOutgoing() {
@@ -62,7 +86,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     }
 
     synchronized private void setIncoming(String incoming) {
-        this.mIncoming = incoming;
+        mIncomingMessageObservable.setIncoming(incoming);
     }
 
     synchronized public void setOutgoing(String outgoing) {

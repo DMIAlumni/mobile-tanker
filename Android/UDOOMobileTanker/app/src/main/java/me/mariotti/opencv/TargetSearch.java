@@ -3,6 +3,7 @@ package me.mariotti.opencv;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import me.mariotti.udoomobiletanker.TankLogic;
 import me.mariotti.udoomobiletanker.R;
 import me.mariotti.udoomobiletanker.TankActivity;
 import org.opencv.core.*;
@@ -15,8 +16,9 @@ import org.opencv.objdetect.CascadeClassifier;
 public class TargetSearch {
     private final String TAG = "TargetSearch";
     private TankActivity mTankActivity;
+    private TankLogic mTankLogic;
     private Mat mGrayscaleImage;
-    private int absoluteFaceSize,centerCrossSize = 20;
+    private int absoluteFaceSize, centerCrossSize = 20;
     private ImageView mImageDirection;
     private TextView mTextDirection;
     private Rect mTarget;
@@ -27,13 +29,14 @@ public class TargetSearch {
     private static final int AIM_DELTA = 10;
 
     public TargetSearch(TankActivity mTankActivity) {
-        this.mTankActivity=mTankActivity;
+        this.mTankActivity = mTankActivity;
         mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
         mImageDirection.setImageResource(R.drawable.ok);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
-
+        mTankLogic = mTankActivity.mTankLogic;
     }
-    public Mat AnalyzeFrame(Mat mIncomingFrame, CascadeClassifier faceCascadeClassifier){
+
+    public Mat AnalyzeFrame(Mat mIncomingFrame, CascadeClassifier faceCascadeClassifier) {
         Scalar color;
         // Create a grayscale version of the image
         Imgproc.cvtColor(mIncomingFrame, mGrayscaleImage, Imgproc.COLOR_RGBA2GRAY);
@@ -88,16 +91,20 @@ public class TargetSearch {
                     mTextDirection.setVisibility(View.VISIBLE);
                     mImageDirection.setVisibility(View.VISIBLE);
                     if (frameCenter.x - (mTarget.x + mTarget.width / 2) > AIM_DELTA) {
+                        mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_LEFT);
                         mTextDirection.setText("Turn Left");
                         mImageDirection.setImageResource(R.drawable.right);
                     } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < -AIM_DELTA) {
+                        mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_RIGHT);
                         mImageDirection.setImageResource(R.drawable.left);
                         mTextDirection.setText("Turn Right");
                     } else {
+                        mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_FRONT);
                         mImageDirection.setImageResource(R.drawable.ok);
                         mTextDirection.setText("STOP!");
                     }
                 } else {
+                    mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_NONE);
                     mTextDirection.setVisibility(View.INVISIBLE);
                     mImageDirection.setVisibility(View.INVISIBLE);
                 }
@@ -106,9 +113,11 @@ public class TargetSearch {
         mTankActivity.runOnUiThread(new updateDirections(mTarget, frameCenter));
         return mIncomingFrame;
     }
+
     public void setAbsoluteFaceSize(int absoluteFaceSize) {
         this.absoluteFaceSize = absoluteFaceSize;
     }
+
     public void setmGrayscaleImage(Mat mGrayscaleImage) {
         this.mGrayscaleImage = mGrayscaleImage;
     }
