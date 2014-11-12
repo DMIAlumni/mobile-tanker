@@ -25,6 +25,7 @@ public class TankLogic implements Observer {
 
     public TankLogic(Communicator mCommunicator) {
         this.mCommunicator = mCommunicator;
+        mCommunicator.mIncomingMessageObservable.addObserver(this);
     }
 
     @Override
@@ -56,6 +57,6 @@ public class TankLogic implements Observer {
     }
 
     private void decodeMessage() {
-
+    //mCommunicator.setOutgoing("Ricevuto da Arudino"+mCommunicator.getIncoming());
     }
 }

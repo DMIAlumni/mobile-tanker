@@ -18,10 +18,10 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private final String TAG = "Communicator";
     //private TankActivity mActivity;
     private TextView mLogTextView;
-    private String mIncoming, mOutgoing = "0", mLastIncome, mLastSent = "";
+    private String mIncoming, mOutgoing = "0", mLastSent = "", mLastReceived = "";
     private AdkManager mArduino;
     boolean mKeepAlive = true;
-    IncomingMessage mIncomingMessageObservable;
+    public IncomingMessage mIncomingMessageObservable;
 
     public Communicator(TankActivity mActivity) {
         //this.mActivity = mActivity;
@@ -38,17 +38,28 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
 
     @Override
     protected Void doInBackground(TankActivity... params) {
-        DateFormat mDateFormat = new SimpleDateFormat("HH:mm:ss.S");
+        DateFormat mDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
         while (mKeepAlive) {
             try {
+                //TODO receiving incorrect message after sending one, check the incoming message: it should be the same for five times before get it as stable and update the observers. Arduino should send the command 2xtimes it need to be stable (ten times with this configuration)
+                // Sending phase
                 String mSending = getOutgoing();
                 if (!mLastSent.equals(mSending)) {
-                    //get current date time with Date()
                     Date mDate = new Date();
                     publishProgress(mDateFormat.format(mDate) + " | Sending: " + mSending);
                     mLastSent = mSending;
                 }
+                //sending the last command until it changes
                 mArduino.writeSerial(mSending);
+                // this.wait(5);
+                // Receiving phase
+                String mReceiving = mArduino.readString();
+                if (!mReceiving.equals("") && !mReceiving.equals(mLastReceived)) {
+                    setIncoming(mReceiving);
+                    mLastReceived = mReceiving;
+                    Date mDate = new Date();
+                    publishProgress(mDateFormat.format(mDate) + " | Receiving: " + mReceiving);
+                }
             } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage());
             }
@@ -64,7 +75,8 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
             message = incoming;
             triggerObservers();
         }
-        public String getIncoming(){
+
+        public String getIncoming() {
             return message;
         }
 
@@ -74,7 +86,6 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
         }
 
     }
-
 
 
     synchronized public String getIncoming() {

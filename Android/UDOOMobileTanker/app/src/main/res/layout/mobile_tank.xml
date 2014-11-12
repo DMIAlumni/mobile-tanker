@@ -39,6 +39,7 @@
                     android:text="LOG\n"
                     android:id="@+id/LogTextView"
                     android:layout_gravity="bottom"/>
+
         </ScrollView>
     </LinearLayout>
 
