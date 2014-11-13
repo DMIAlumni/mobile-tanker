@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <adk.h>
 #include "DualMC33926MotorShield.h"
-#define BUFFSIZE   128
+#define BUFFSIZE   255
 #define MAX_POWER  400
+#define DELAY 50
+
 
 // Start Accessory Descriptor. It's how Arduino identifies itself in Android.
 char accessoryName[] = "UDOO Mobile Tank";
@@ -19,14 +21,17 @@ char url[] = "https://github.com/DMIAlumni/mobile-tanker";
 USBHost Usb;
 ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumber);
 // End ADK configuration
-
+bool DEBUG_MODE = true;
 int randomint;
 int last_send = 0;
-uint8_t buffer[BUFFSIZE];
-char bufNew[BUFFSIZE];
-char charBuf[2000];
+uint8_t inBuffer[BUFFSIZE];
+uint8_t outBuffer[BUFFSIZE];
+char inStringBuffer[BUFFSIZE];
+char outStringBuffer[BUFFSIZE];
 uint32_t bytesRead = 0;
 
+char charBuf[255];
+char bufNew[255];
 DualMC33926MotorShield tank;
 
 void setup() {
@@ -37,8 +42,14 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("Looping");
-  readingFromADK();
+  Serial.print(".");
+  Usb.Task();
+  // Starting listening when ADK is available
+  if (adk.isReady()) {
+    readFromADK();
+    sendingToADK();
+  }
+
 }
 
 void stopEngine() {
@@ -46,25 +57,23 @@ void stopEngine() {
   tank.setM2Speed(0);
 }
 
-void readingFromADK() {
-  Usb.Task();
-  // Starting listening when ADK is available
-  if (adk.isReady()) {
-    adk.read(&bytesRead, BUFFSIZE, buffer);
-    if (bytesRead > 0) {
-      for (int i = 0; i < bytesRead; i++) {
-        if (buffer[i] >= 48 && buffer[i] <= 47)
-          Serial.print(buffer[i] - 48);
-        else
-          Serial.print((char)buffer[i]);
-        Serial.print("-");
-        //eepCommandInterpreter(extractMovement(), extractSpeed());
-        //eepCommandInterpreter(extractMovement(), extractSpeed());
-      }	Serial.print("RECEIVED FROM USB: ");
-      Serial.println(*(uint32_t*)buffer);
+char* readFromADK() {
+  adk.read(&bytesRead, BUFFSIZE, inBuffer);
+  if (bytesRead > 0) {
+    memset(inStringBuffer, 0, BUFFSIZE);
+    memcpy(inStringBuffer, inBuffer, bytesRead);
+    if (DEBUG_MODE) {
+      Serial.print("\nReceiving | ");
+      Serial.print(inStringBuffer);
+      Serial.print(" | ");
+      Serial.print(strlen(inStringBuffer));
+      Serial.println(" bytes incoming");      
     }
-  } sendingToADK();
+    delay(DELAY/10);
+    return inStringBuffer;   
+  }return {0}; // 0 is the command for NOP
 }
+
 
 void sendingToADK() {
   int time = millis();
@@ -85,16 +94,22 @@ void sendingToADK() {
     for (int i = 0; i < s.length(); i++) {
       bufNew[i] = s.charAt(i);
     }
+    memset(outStringBuffer, 0, BUFFSIZE);
+    sprintf(outStringBuffer, "%d,%d,%d", randomint, randomint - 1000, randomint + 1000);    
+    memcpy(outBuffer, outStringBuffer, BUFFSIZE);
+    adk.write(strlen(outStringBuffer), (uint8_t*)outBuffer);
+      if (DEBUG_MODE) {
+    Serial.print("Sending | ");
+    Serial.print(outStringBuffer);
+    Serial.print(" | ");
+    Serial.print(strlen(outStringBuffer));
+    Serial.println(" bytes outgoing");
+  }
   }
   
-  writeToAdk(charBuf);
-  delay(100);
+
+  //writeToAdk(charBuf);
+  delay(DELAY);
 }
 
-void writeToAdk(char textToSend[]) {
-  Serial.print(textToSend);
-  Serial.print(" ");
-  Serial.print(strlen(textToSend));
-  Serial.println(" bytes in partenza");
-  adk.write(strlen(textToSend), (uint8_t*)textToSend);
-}
+
