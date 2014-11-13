@@ -1,8 +1,10 @@
-package me.mariotti.udoomobiletanker;
+package me.mariotti.tanker.messaging;
 
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
+import me.mariotti.tanker.R;
+import me.mariotti.tanker.TankActivity;
 import me.palazzetti.adktoolkit.AdkManager;
 
 import java.text.DateFormat;
@@ -67,25 +69,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
         return null;
     }
 
-    //This is just an Observable wrapper for the incoming message
-    class IncomingMessage extends Observable {
-        private String message = "";
 
-        public void setIncoming(String incoming) {
-            message = incoming;
-            triggerObservers();
-        }
-
-        public String getIncoming() {
-            return message;
-        }
-
-        private void triggerObservers() {
-            setChanged();
-            notifyObservers();
-        }
-
-    }
 
 
     synchronized public String getIncoming() {

@@ -1,4 +1,6 @@
-package me.mariotti.udoomobiletanker;
+package me.mariotti.tanker;
+
+import me.mariotti.tanker.messaging.Communicator;
 
 import java.util.Observable;
 import java.util.Observer;

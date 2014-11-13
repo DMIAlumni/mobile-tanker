@@ -1,4 +1,4 @@
-package me.mariotti.udoomobiletanker;
+package me.mariotti.tanker;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

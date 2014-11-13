@@ -1,4 +1,4 @@
-package me.mariotti.udoomobiletanker;
+package me.mariotti.tanker;
 
 /**
  * Created by simone on 28/10/14.
@@ -13,6 +13,7 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.ScrollView;
 import me.mariotti.opencv.TargetSearch;
+import me.mariotti.tanker.messaging.Communicator;
 import me.palazzetti.adktoolkit.AdkManager;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
