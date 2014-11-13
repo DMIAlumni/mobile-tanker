@@ -86,7 +86,9 @@ void sendingToADK() {
       bufNew[i] = s.charAt(i);
     }
   }
+  
   writeToAdk(charBuf);
+  delay(100);
 }
 
 void writeToAdk(char textToSend[]) {
