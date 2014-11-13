@@ -7,6 +7,7 @@ import me.mariotti.tanker.R;
 import me.mariotti.tanker.TankActivity;
 import me.palazzetti.adktoolkit.AdkManager;
 
+import java.io.FileInputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,16 +19,17 @@ import java.util.Observable;
  */
 public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private final String TAG = "Communicator";
-    //private TankActivity mActivity;
+    private final TankActivity mActivity;
+    private final int DELAY = 50;
     private TextView mLogTextView;
-    private String mIncoming, mOutgoing = "0", mLastSent = "", mLastReceived = "";
+    private String mOutgoing = "0", mLastSent = "", mLastReceived = "";
     private AdkManager mArduino;
     boolean mKeepAlive = true;
     public IncomingMessage mIncomingMessageObservable;
 
     public Communicator(TankActivity mActivity) {
-        //this.mActivity = mActivity;
         mArduino = mActivity.mArduino;
+        this.mActivity = mActivity;
         mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
         mIncomingMessageObservable = new IncomingMessage();
     }
@@ -35,7 +37,12 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     @Override
     protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
-        mLogTextView.append(values[0] + '\n');
+        int lenght = mLogTextView.getText().length();
+        if (lenght < 10000) {
+            mLogTextView.append(values[0] + '\n');
+        } else {
+            mLogTextView.setText(mLogTextView.getText().subSequence(lenght - 5000, lenght));
+        }
     }
 
     @Override
@@ -43,7 +50,6 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
         DateFormat mDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
         while (mKeepAlive) {
             try {
-                //TODO receiving incorrect message after sending one, check the incoming message: it should be the same for five times before get it as stable and update the observers. Arduino should send the command 2xtimes it need to be stable (ten times with this configuration)
                 // Sending phase
                 String mSending = getOutgoing();
                 if (!mLastSent.equals(mSending)) {
@@ -55,6 +61,8 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
                 mArduino.writeSerial(mSending);
                 // this.wait(5);
                 // Receiving phase
+                //FileInputStream a= new FileInputStream("");
+
                 String mReceiving = mArduino.readString();
                 if (!mReceiving.equals("") && !mReceiving.equals(mLastReceived)) {
                     setIncoming(mReceiving);
@@ -62,15 +70,13 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
                     Date mDate = new Date();
                     publishProgress(mDateFormat.format(mDate) + " | Receiving: " + mReceiving);
                 }
+                Thread.sleep(DELAY);
             } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage());
             }
         }
         return null;
     }
-
-
-
 
     synchronized public String getIncoming() {
         return mIncomingMessageObservable.getIncoming();

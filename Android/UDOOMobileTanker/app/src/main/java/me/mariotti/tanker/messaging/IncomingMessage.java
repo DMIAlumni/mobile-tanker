@@ -19,5 +19,4 @@ public class IncomingMessage extends Observable {
         setChanged();
         notifyObservers();
     }
-
 }
