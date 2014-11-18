@@ -2,25 +2,20 @@ package me.mariotti.tanker;
 
 import me.mariotti.tanker.messaging.Communicator;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-/**
- * Created by simone on 31/10/14.
- */
 public class TankLogic implements Observer {
     public final static int TARGET_POSITION_FRONT = 3;
     public final static int TARGET_POSITION_LEFT = 1;
     public final static int TARGET_POSITION_RIGHT = 2;
     public final static int TARGET_POSITION_NONE = 0;
-    private final String CMD_LEFT="TURN LEFT";
-    private final String CMD_RIGHT="TURN RIGHT";
-    private final String CMD_SEARCH="NO TARGET IN SIGHT, SEARCH IT!";
-    private final String CMD_FORWARD="GO AHEAD";
-    private final String CMD_BACKWARD="GO BACK";
     private final String TAG = "TankLogic";
     private Communicator mCommunicator;
-    private String incomingMessage;
+    private String incomingMessageTemp;
+    private Map incomingMessage;
     private Boolean targetInSight = false;
     private int targetDirection;
 
@@ -28,11 +23,6 @@ public class TankLogic implements Observer {
     public TankLogic(Communicator mCommunicator) {
         this.mCommunicator = mCommunicator;
         mCommunicator.mIncomingMessageObservable.addObserver(this);
-    }
-
-    @Override
-    public void update(Observable observable, Object data) {
-        decodeMessage();
     }
 
     public void targetPosition(int position) {
@@ -44,21 +34,28 @@ public class TankLogic implements Observer {
     private void think() {
         switch (targetDirection){
             case TARGET_POSITION_LEFT:
-                mCommunicator.setOutgoing(CMD_LEFT);
+                mCommunicator.setOutgoing(Movement.turnLeft());
                 break;
             case TARGET_POSITION_RIGHT:
-                mCommunicator.setOutgoing(CMD_RIGHT);
+                mCommunicator.setOutgoing(Movement.turnRight());
                 break;
             case TARGET_POSITION_FRONT:
-                mCommunicator.setOutgoing(CMD_FORWARD);
+                mCommunicator.setOutgoing(Movement.stop());
                 break;
             case TARGET_POSITION_NONE:
-                mCommunicator.setOutgoing(CMD_SEARCH);
+                mCommunicator.setOutgoing(Movement.search());
                 break;
         }
     }
 
+    @Override
+    public void update(Observable observable, Object data) {
+        decodeMessage();
+    }
+
     private void decodeMessage() {
+        incomingMessage=Movement.decodeIncomingMessage(mCommunicator.getIncoming());
+        mCommunicator.setOutgoing(incomingMessage.toString());
     //mCommunicator.setOutgoing("Ricevuto da Arudino"+mCommunicator.getIncoming());
     }
 }

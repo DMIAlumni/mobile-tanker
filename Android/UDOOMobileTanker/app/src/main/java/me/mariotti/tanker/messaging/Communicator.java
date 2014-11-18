@@ -3,6 +3,7 @@ package me.mariotti.tanker.messaging;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
+import me.mariotti.tanker.Movement;
 import me.mariotti.tanker.R;
 import me.mariotti.tanker.TankActivity;
 import me.palazzetti.adktoolkit.AdkManager;
@@ -22,7 +23,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private final TankActivity mActivity;
     private final int DELAY = 50;
     private TextView mLogTextView;
-    private String mOutgoing = "0", mLastSent = "", mLastReceived = "";
+    private String mOutgoing = Movement.stop(), mLastSent = "", mLastReceived = "";
     private AdkManager mArduino;
     boolean mKeepAlive = true;
     public IncomingMessage mIncomingMessageObservable;
@@ -37,11 +38,11 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     @Override
     protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
-        int lenght = mLogTextView.getText().length();
-        if (lenght < 10000) {
+        int length = mLogTextView.getText().length();
+        if (length < 10000) {
             mLogTextView.append(values[0] + '\n');
         } else {
-            mLogTextView.setText(mLogTextView.getText().subSequence(lenght - 5000, lenght));
+            mLogTextView.setText(mLogTextView.getText().subSequence(length - 5000, length));
         }
     }
 
@@ -59,10 +60,8 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
                 }
                 //sending the last command until it changes
                 mArduino.writeSerial(mSending);
-                // this.wait(5);
-                // Receiving phase
-                //FileInputStream a= new FileInputStream("");
 
+                // Receiving phase
                 String mReceiving = mArduino.readString();
                 if (!mReceiving.equals("") && !mReceiving.equals(mLastReceived)) {
                     setIncoming(mReceiving);
