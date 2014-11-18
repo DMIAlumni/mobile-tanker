@@ -22,17 +22,18 @@ USBHost Usb;
 ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumber);
 // End ADK configuration
 bool DEBUG_MODE = true;
-int randomint;
-int last_send = 0;
+
 uint8_t inBuffer[BUFFSIZE];
 uint8_t outBuffer[BUFFSIZE];
 char inStringBuffer[BUFFSIZE];
 char outStringBuffer[BUFFSIZE];
 uint32_t bytesRead = 0;
 
-char charBuf[255];
-char bufNew[255];
 DualMC33926MotorShield tank;
+
+// Test Variabiles
+int randomint;
+int last_send = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -42,74 +43,78 @@ void setup() {
 }
 
 void loop() {
-  Serial.print(".");
-  Usb.Task();
-  // Starting listening when ADK is available
-  if (adk.isReady()) {
-    readFromADK();
-    sendingToADK();
+  if (DEBUG_MODE) {
+    Serial.print(".");
   }
-
-}
-
-void stopEngine() {
-  tank.setM1Speed(0);
-  tank.setM2Speed(0);
+  Usb.Task();
+  // Check that ADK is available
+  if (adk.isReady()) {
+    char*a;
+    if (strlen(a = readFromADK()) > 0) {
+      Serial.println(strlen(a));
+    } else {
+      Serial.print("*");
+    }
+    sendToADK(millis(), millis(), millis());
+  }
+  delay(DELAY);
 }
 
 char* readFromADK() {
   adk.read(&bytesRead, BUFFSIZE, inBuffer);
+  memset(inStringBuffer, 0, BUFFSIZE);
   if (bytesRead > 0) {
-    memset(inStringBuffer, 0, BUFFSIZE);
     memcpy(inStringBuffer, inBuffer, bytesRead);
     if (DEBUG_MODE) {
       Serial.print("\nReceiving | ");
       Serial.print(inStringBuffer);
       Serial.print(" | ");
       Serial.print(strlen(inStringBuffer));
-      Serial.println(" bytes incoming");      
+      Serial.println(" bytes incoming");
     }
-    delay(DELAY/10);
-    return inStringBuffer;   
-  }return {0}; // 0 is the command for NOP
+  }
+  delay(DELAY / 10);
+  return inStringBuffer; // If nothing has been read then return the previously initialized empty array
 }
 
-
-void sendingToADK() {
-  int time = millis();
-  if (time - last_send > 5000) {
-    last_send = time;
-    randomint = random(-1500, 1500);
-    String s = String("");
-    s += randomint;
-    s += ":";
-    s += randomint - 1000;
-    s += ":";
-    s += randomint;
-    s += ";";
-
-    s.toCharArray(charBuf, sizeof(charBuf));
-    //charBuf[0]='a';
-    delay(10);
-    for (int i = 0; i < s.length(); i++) {
-      bufNew[i] = s.charAt(i);
-    }
-    memset(outStringBuffer, 0, BUFFSIZE);
-    sprintf(outStringBuffer, "%d,%d,%d", randomint, randomint - 1000, randomint + 1000);    
-    memcpy(outBuffer, outStringBuffer, BUFFSIZE);
-    adk.write(strlen(outStringBuffer), (uint8_t*)outBuffer);
-      if (DEBUG_MODE) {
-    Serial.print("Sending | ");
+void sendToADK(int command, int param1, int param2) {
+  memset(outStringBuffer, 0, BUFFSIZE);
+  sprintf(outStringBuffer, "%d,%d,%d", command, param1, param2);
+  memcpy(outBuffer, outStringBuffer, BUFFSIZE);
+  adk.write(strlen(outStringBuffer), outBuffer);
+  if (DEBUG_MODE) {
+    Serial.print("\nSending | ");
     Serial.print(outStringBuffer);
     Serial.print(" | ");
     Serial.print(strlen(outStringBuffer));
     Serial.println(" bytes outgoing");
   }
-  }
-  
-
-  //writeToAdk(charBuf);
-  delay(DELAY);
+  delay(DELAY / 10);
 }
 
+void sendToADKDelayed() {
+  int time = millis();
+  if (time - last_send > 5000) {
+    last_send = time;
+    randomint = random(-1500, 1500);
+    memset(outStringBuffer, 0, BUFFSIZE);
+    sprintf(outStringBuffer, "%d,%d,%d", randomint, randomint - 1000, randomint + 1000);
+    memcpy(outBuffer, outStringBuffer, BUFFSIZE);
+    adk.write(strlen(outStringBuffer), outBuffer);
+    if (DEBUG_MODE) {
+      Serial.print("\nSending | ");
+      Serial.print(outStringBuffer);
+      Serial.print(" | ");
+      Serial.print(strlen(outStringBuffer));
+      Serial.println(" bytes outgoing");
+    }
+  }
+  delay(DELAY / 10);
+}
+
+
+void stopEngine() {
+  tank.setM1Speed(0);
+  tank.setM2Speed(0);
+}
 
