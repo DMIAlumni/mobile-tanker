@@ -55,7 +55,7 @@ void loop() {
     } else {
       Serial.print("*");
     }
-    sendToADK(millis(), millis(), millis());
+    sendToADKDelayed( random(0,2), random(0,4) + random(1,3)*100, random(150,152));
   }
   delay(DELAY);
 }
@@ -92,13 +92,13 @@ void sendToADK(int command, int param1, int param2) {
   delay(DELAY / 10);
 }
 
-void sendToADKDelayed() {
+void sendToADKDelayed(int command, int param1, int param2) {
   int time = millis();
-  if (time - last_send > 5000) {
+  if (time - last_send > 2000) {
     last_send = time;
     randomint = random(-1500, 1500);
     memset(outStringBuffer, 0, BUFFSIZE);
-    sprintf(outStringBuffer, "%d,%d,%d", randomint, randomint - 1000, randomint + 1000);
+    sprintf(outStringBuffer, "%d,%d,%d",command, param1, param2);
     memcpy(outBuffer, outStringBuffer, BUFFSIZE);
     adk.write(strlen(outStringBuffer), outBuffer);
     if (DEBUG_MODE) {
