@@ -10,6 +10,7 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.ScrollView;
 import me.mariotti.opencv.TargetSearch;
@@ -32,6 +33,7 @@ import java.io.InputStream;
 public class TankActivity extends Activity implements CvCameraViewListener {
 
     private final String TAG = "TankActivity";
+    public static boolean DEBUG = false;
     private CameraBridgeViewBase mOpenCvCameraView;
     private CascadeClassifier mFaceCascadeClassifier;
     public Communicator mCommunicator;
@@ -134,5 +136,9 @@ public class TankActivity extends Activity implements CvCameraViewListener {
         mArduino.open();
         mCommunicator.setKeepAlive(true);
         mCommunicator.execute();
+    }
+
+    public void toggleDebug(View w) {
+        DEBUG=!DEBUG;
     }
 }

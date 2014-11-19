@@ -3,27 +3,21 @@ package me.mariotti.tanker.messaging;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
-import me.mariotti.tanker.Movement;
 import me.mariotti.tanker.R;
 import me.mariotti.tanker.TankActivity;
 import me.palazzetti.adktoolkit.AdkManager;
 
-import java.io.FileInputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Observable;
 
 
-/**
- * Created by simone on 30/10/14.
- */
 public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private final String TAG = "Communicator";
     private final TankActivity mActivity;
     private final int DELAY = 50;
     private TextView mLogTextView;
-    private String mOutgoing = Movement.stop(), mLastSent = "", mLastReceived = "";
+    private String mOutgoing = MessageEncoderDecoder.stop(), mLastSent = "", mLastReceived = "";
     private AdkManager mArduino;
     boolean mKeepAlive = true;
     public IncomingMessage mIncomingMessageObservable;
@@ -38,11 +32,13 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     @Override
     protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
-        int length = mLogTextView.getText().length();
-        if (length < 10000) {
-            mLogTextView.append(values[0] + '\n');
-        } else {
-            mLogTextView.setText(mLogTextView.getText().subSequence(length - 5000, length));
+        if (TankActivity.DEBUG) {
+            int length = mLogTextView.getText().length();
+            if (length < 10000) {
+                mLogTextView.append(values[0] + '\n');
+            } else {
+                mLogTextView.setText(mLogTextView.getText().subSequence(length - 5000, length));
+            }
         }
     }
 

@@ -1,9 +1,9 @@
 package me.mariotti.tanker;
 
 import me.mariotti.tanker.messaging.Communicator;
+import me.mariotti.tanker.messaging.MessageEncoderDecoder;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -15,7 +15,7 @@ public class TankLogic implements Observer {
     private final String TAG = "TankLogic";
     private Communicator mCommunicator;
     private String incomingMessageTemp;
-    private Map incomingMessage;
+    private HashMap<String, Integer> incomingMessage;
     private Boolean targetInSight = false;
     private int targetDirection;
 
@@ -32,18 +32,18 @@ public class TankLogic implements Observer {
     }
 
     private void think() {
-        switch (targetDirection){
+        switch (targetDirection) {
             case TARGET_POSITION_LEFT:
-                mCommunicator.setOutgoing(Movement.turnLeft());
+                mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft());
                 break;
             case TARGET_POSITION_RIGHT:
-                mCommunicator.setOutgoing(Movement.turnRight());
+                mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight());
                 break;
             case TARGET_POSITION_FRONT:
-                mCommunicator.setOutgoing(Movement.stop());
+                mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
                 break;
             case TARGET_POSITION_NONE:
-                mCommunicator.setOutgoing(Movement.search());
+                mCommunicator.setOutgoing(MessageEncoderDecoder.search());
                 break;
         }
     }
@@ -54,8 +54,11 @@ public class TankLogic implements Observer {
     }
 
     private void decodeMessage() {
-        incomingMessage=Movement.decodeIncomingMessage(mCommunicator.getIncoming());
-        mCommunicator.setOutgoing(incomingMessage.toString());
-    //mCommunicator.setOutgoing("Ricevuto da Arudino"+mCommunicator.getIncoming());
+        incomingMessage = MessageEncoderDecoder.decodeIncomingMessage(mCommunicator.getIncoming());
+        if (incomingMessage.get("ERROR") != -1) {
+            // Do things
+            //mCommunicator.setOutgoing(incomingMessage.toString());
+        }
+        //mCommunicator.setOutgoing("Ricevuto da Arudino"+mCommunicator.getIncoming());
     }
 }

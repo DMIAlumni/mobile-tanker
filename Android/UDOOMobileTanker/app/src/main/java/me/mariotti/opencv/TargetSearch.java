@@ -10,9 +10,7 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
-/**
- * Created by simone on 31/10/14.
- */
+
 public class TargetSearch {
     private final String TAG = "TargetSearch";
     private TankActivity mTankActivity;
@@ -91,20 +89,20 @@ public class TargetSearch {
                     mTextDirection.setVisibility(View.VISIBLE);
                     mImageDirection.setVisibility(View.VISIBLE);
                     if (frameCenter.x - (mTarget.x + mTarget.width / 2) > AIM_DELTA) {
-                        mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_LEFT);
+                        mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
                         mTextDirection.setText("Turn Left");
                         mImageDirection.setImageResource(R.drawable.right);
                     } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < -AIM_DELTA) {
-                        mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_RIGHT);
+                        mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
                         mImageDirection.setImageResource(R.drawable.left);
                         mTextDirection.setText("Turn Right");
                     } else {
-                        mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_FRONT);
+                        mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
                         mImageDirection.setImageResource(R.drawable.ok);
                         mTextDirection.setText("STOP!");
                     }
                 } else {
-                    mTankLogic.targetPosition(mTankLogic.TARGET_POSITION_NONE);
+                    mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
                     mTextDirection.setVisibility(View.INVISIBLE);
                     mImageDirection.setVisibility(View.INVISIBLE);
                 }

@@ -1,14 +1,14 @@
-package me.mariotti.tanker;
+package me.mariotti.tanker.messaging;
+
+import android.util.Log;
+import me.mariotti.tanker.TankActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 
-/**
- * Created by simone on 18/11/14.
- */
-public class Movement {
+public class MessageEncoderDecoder {
+    private final static String TAG = "MessageEncoderDecoder";
     // Android --> Arduino codes
     private final static int CMD_NULL_VALUE = 0;
     private final static int CMD_MOVE = 1;
@@ -17,6 +17,7 @@ public class Movement {
     private final static int CMD_RIGHT = 4;
     private final static int CMD_SHOOT = 5;
     private final static int CMD_SEARCH = 10;
+
     // Arduino --> Aandroid codes
     // Message types
     private final static int INFO = 0;
@@ -66,7 +67,10 @@ public class Movement {
     }
 
     // Arduino --> Android messages
-    public static Map<String, Integer> decodeIncomingMessage(String mIncomingMessage) {
+    public static HashMap<String, Integer> decodeIncomingMessage(String mIncomingMessage) {
+        if (TankActivity.DEBUG) {
+            Log.i(TAG, "mIncomingMessage: " + mIncomingMessage);
+        }
         HashMap<String, Integer> parsedMessage = new HashMap<String, Integer>(3);
         ArrayList<String> splittedMessage = new ArrayList<String>(Arrays.asList(mIncomingMessage.split(",")));
         int messageType = Integer.valueOf(splittedMessage.get(0));
@@ -93,6 +97,9 @@ public class Movement {
             default: {
                 parsedMessage.put("ERROR", -1);
             }
+        }
+        if (TankActivity.DEBUG) {
+            Log.i(TAG, "parsedMessage: " + parsedMessage.toString());
         }
         return parsedMessage;
     }

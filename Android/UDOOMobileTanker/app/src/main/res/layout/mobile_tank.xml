@@ -14,10 +14,17 @@
         android:layout_gravity="center|left"
         opencv:show_fps="true"
         opencv:camera_id="any" android:minHeight="540dp" android:minWidth="960dp" android:longClickable="false"/>
+    <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DEBUG"
+            android:id="@+id/debugButton" android:singleLine="true" android:onClick="toggleDebug"
+            android:nestedScrollingEnabled="true" android:layout_gravity="bottom" android:gravity="center_vertical|center_horizontal"/>
     <LinearLayout
             android:orientation="vertical"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" android:gravity="center_vertical">
+            android:layout_height="fill_parent" android:gravity="center_vertical" android:layout_gravity="bottom"
+            android:baselineAligned="true">
         <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -41,6 +48,7 @@
                     android:layout_gravity="bottom"/>
 
         </ScrollView>
+
     </LinearLayout>
 
 </LinearLayout>
