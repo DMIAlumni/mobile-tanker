@@ -1,9 +1,5 @@
 package me.mariotti.tanker;
 
-/**
- * Created by simone on 28/10/14.
- */
-
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
@@ -107,7 +103,9 @@ public class TankActivity extends Activity implements CvCameraViewListener {
 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
-        return mTargetSearch.AnalyzeFrame(aInputFrame, mFaceCascadeClassifier);
+        //return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
+        //return mTargetSearch.searchContour(aInputFrame);
+        return mTargetSearch.searchColours(aInputFrame);
     }
 
     @Override

@@ -55,7 +55,7 @@ void loop() {
     } else {
       Serial.print("*");
     }
-    sendToADKDelayed( random(0,2), random(0,4) + random(1,3)*100, random(150,152));
+    sendToADK( random(0,2), random(0,4) + random(1,3)*100, random(150,152));
   }
   delay(DELAY);
 }
