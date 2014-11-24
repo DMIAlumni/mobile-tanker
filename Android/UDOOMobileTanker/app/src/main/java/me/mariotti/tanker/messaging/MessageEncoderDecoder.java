@@ -36,15 +36,25 @@ public class MessageEncoderDecoder {
     private final static int RELOADED = 202;
     private final static int DISTANCE = 203;
 
+    // Defaults
+    private final static int DEFAULT_VELOCITY = 128;
 
     // Android --> Arduino messages
 
-    public static String move_forward(int motorLeft, int motorRight) {
+    public static String moveForward(int motorLeft, int motorRight) {
         return (CMD_MOVE_FORWARD + "," + motorLeft + "," + motorRight);
     }
 
-    public static String move_backward(int motorLeft, int motorRight) {
+    public static String moveForward() {
+        return moveForward(DEFAULT_VELOCITY, DEFAULT_VELOCITY);
+    }
+
+    public static String moveBackward(int motorLeft, int motorRight) {
         return (CMD_MOVE_BACKWARD + "," + motorLeft + "," + motorRight);
+    }
+
+    public static String moveBackward() {
+        return moveBackward(DEFAULT_VELOCITY, DEFAULT_VELOCITY);
     }
 
     public static String stop() {
@@ -55,12 +65,20 @@ public class MessageEncoderDecoder {
         return (CMD_STOP + "," + stopTime + "," + CMD_NULL_VALUE);
     }
 
+    public static String turnLeft(int velocity) {
+        return (CMD_LEFT + "," + velocity + "," + CMD_NULL_VALUE);
+    }
+
     public static String turnLeft() {
-        return (CMD_LEFT + "," + CMD_NULL_VALUE + "," + CMD_NULL_VALUE);
+        return turnLeft(DEFAULT_VELOCITY);
+    }
+
+    public static String turnRight(int velocity) {
+        return (CMD_RIGHT + "," + velocity + "," + CMD_NULL_VALUE);
     }
 
     public static String turnRight() {
-        return (CMD_RIGHT + "," + CMD_NULL_VALUE + "," + CMD_NULL_VALUE);
+        return turnRight(DEFAULT_VELOCITY);
     }
 
     public static String shoot() {

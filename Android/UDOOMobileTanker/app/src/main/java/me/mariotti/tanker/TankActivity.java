@@ -103,9 +103,9 @@ public class TankActivity extends Activity implements CvCameraViewListener {
 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
-        //return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
+        return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
         //return mTargetSearch.searchContour(aInputFrame);
-        return mTargetSearch.searchColours(aInputFrame);
+        //return mTargetSearch.searchColours(aInputFrame);
     }
 
     @Override
