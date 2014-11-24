@@ -11,7 +11,8 @@ public class MessageEncoderDecoder {
     private final static String TAG = "MessageEncoderDecoder";
     // Android --> Arduino codes
     private final static int CMD_NULL_VALUE = 0;
-    private final static int CMD_MOVE = 1;
+    private final static int CMD_MOVE_FORWARD = 1;
+    private final static int CMD_MOVE_BACKWARD = 6;
     private final static int CMD_STOP = 2;
     private final static int CMD_LEFT = 3;
     private final static int CMD_RIGHT = 4;
@@ -38,8 +39,12 @@ public class MessageEncoderDecoder {
 
     // Android --> Arduino messages
 
-    public static String move(int motorLeft, int motorRight) {
-        return (CMD_MOVE + "," + motorLeft + "," + motorRight);
+    public static String move_forward(int motorLeft, int motorRight) {
+        return (CMD_MOVE_FORWARD + "," + motorLeft + "," + motorRight);
+    }
+
+    public static String move_backward(int motorLeft, int motorRight) {
+        return (CMD_MOVE_BACKWARD + "," + motorLeft + "," + motorRight);
     }
 
     public static String stop() {
