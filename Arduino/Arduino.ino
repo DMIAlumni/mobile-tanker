@@ -23,20 +23,24 @@
 
 // Arduino --> Aandroid codes
 // Message types
-#define INFO 0;
-#define STATE 1;
+#define INFO 0
+#define STATE 1
 // States
-#define IDLE 100;
-#define SEARCHING 101;
-#define HUNTING 102;
-#define EMERGENCY 103;
+#define IDLE 100
+#define SEARCHING 101
+#define HUNTING 102
+#define EMERGENCY 103
 // Actions
-#define STOPPED 150;
-#define MOVING 151;
+#define STOPPED 150
+#define MOVING 151
 // Infos
-#define SHOOTED 201;
-#define RELOADED 202;
-#define DISTANCE 203;
+#define SHOOTED 201
+#define RELOADED 202
+#define DISTANCE 203
+
+//Ultrasonic Ranging Module
+#define TRIG_PIN 0
+#define ECHO_PIN 0
 
 const int
 LEFT = 0,
@@ -94,9 +98,9 @@ USBHost Usb;
 ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumber);
 // End ADK configuration
 // Debug mode for communication
-bool COM_DEBUG_MODE = false;
+bool COM_DEBUG_MODE = true;
 // Debug mode for movment
-bool MOV_DEBUG_MODE = true;
+bool MOV_DEBUG_MODE = false;
 uint8_t inBuffer[BUFFSIZE];
 uint8_t outBuffer[BUFFSIZE];
 char inStringBuffer[BUFFSIZE];
@@ -179,7 +183,8 @@ void loop() {
       }
       Serial.print("*");
     }
-    sendToADK( random(0, 2), random(0, 4) + random(1, 3) * 100, random(150, 152));
+    //getDistance();
+    sendToADK( random(44, 90), random(0, 4) + random(1, 3) * 100, random(150, 152));
   }
   delay(DELAY);
 }
@@ -265,6 +270,19 @@ bool decodeCommand(char* incoming, int* command, int* param1, int* param2) {
   }
   return true;
 
+}
+void getDistance(){
+  long duration, distance;
+  digitalWrite(TRIG_PIN, LOW); 
+  delayMicroseconds(2); 
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  //The module return an high signal with duration equal to the sound travel time
+  duration = pulseIn(ECHO_PIN, HIGH);
+  // Divide half 
+  //distance = (duration/2) / 29.1
+  sendToADK(INFO,DISTANCE,duration);
 }
 
 void setDirection(int side, bool direction) {

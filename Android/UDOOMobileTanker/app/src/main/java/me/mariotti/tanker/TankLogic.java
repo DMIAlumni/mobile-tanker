@@ -28,6 +28,7 @@ public class TankLogic implements Observer {
     private int frameWidth;
     private int turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
     private int velocityStep = 1;
+    private boolean isMovingForward;
 
 
     public TankLogic(Communicator mCommunicator) {
@@ -62,30 +63,42 @@ public class TankLogic implements Observer {
 
         if (!targetInSight) {
             mCommunicator.setOutgoing(MessageEncoderDecoder.search());
+            isMovingForward=false;
             lastTargetCenter = null;
             return;
         }
         //If target is not correctly aimed
         if (targetCenter.x < frameWidth / 2 - targetWidth / 2 || targetCenter.x > frameWidth / 2 + targetWidth / 2) {
             //power up velocity if since last frame we didn't move, and wen we start moving maintain it since aim OK
-            if (isNotMoving()) {
+            if (isNotTurning()) {
                 turnVelocity += velocityStep;
             }
             if (targetDirection == TARGET_POSITION_LEFT) {
-                mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity,MessageEncoderDecoder.TURN_NORMALLY));
+                if (isMovingForward) {
+                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140, 200));
+                } else {
+                    mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
+                    isMovingForward=false;
+                }
             }
             if (targetDirection == TARGET_POSITION_RIGHT) {
-                mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
+                if (isMovingForward) {
+                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(200, 140));
+                } else {
+                    mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
+                    isMovingForward=false;
+                }
             }
         } else {
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140,140));
+            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140, 140));
+            isMovingForward = true;
         }
         lastTargetCenter = targetCenter;
     }
 
-    private boolean isNotMoving() {
-        return lastTargetCenter!=null && Math.abs(targetCenter.x-lastTargetCenter.x)<10;
+    private boolean isNotTurning() {
+        return lastTargetCenter != null && Math.abs(targetCenter.x - lastTargetCenter.x) < 10;
     }
 
     private void decodeMessage() {

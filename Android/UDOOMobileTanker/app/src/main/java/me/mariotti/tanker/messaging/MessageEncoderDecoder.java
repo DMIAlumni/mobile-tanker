@@ -39,7 +39,7 @@ public class MessageEncoderDecoder {
     // Infos
     private final static int SHOOTED = 201;
     private final static int RELOADED = 202;
-    private final static int DISTANCE = 203;
+    public final static int DISTANCE = 203;
 
     // Defaults
     public final static int DEFAULT_VELOCITY = 115;
