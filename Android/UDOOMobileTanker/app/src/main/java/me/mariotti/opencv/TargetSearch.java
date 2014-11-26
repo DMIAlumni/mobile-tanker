@@ -33,7 +33,7 @@ public class TargetSearch {
     private static final Scalar GREEN = new Scalar(0, 255, 0);
     private static final Scalar BLUE = new Scalar(0, 0, 255);
     //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
-    private static final int AIM_DELTA = 10;
+    private static final int AIM_DELTA = 50;
 
     public TargetSearch(TankActivity mTankActivity) {
         this.mTankActivity = mTankActivity;
