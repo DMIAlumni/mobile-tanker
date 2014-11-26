@@ -6,7 +6,7 @@
 #define LED_RED 14
 #define BUFFSIZE   255
 #define MAX_POWER  400
-#define DELAY 10
+#define DELAY 40 // Smaller delay breaks everything about communication
 
 // Android --> Arduino codes
 #define CMD_NULL_VALUE 0
@@ -39,8 +39,8 @@
 #define DISTANCE 203
 
 //Ultrasonic Ranging Module
-#define TRIG_PIN 0
-#define ECHO_PIN 0
+#define TRIG_PIN 2
+#define ECHO_PIN 4
 
 const int
 LEFT = 0,
@@ -122,6 +122,8 @@ void setup() {
   pinMode(DIR_RIGHT, OUTPUT);    // Direction pin on channel B
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_RED, OUTPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
   Serial.begin(115200);
   delay(1000);
   Serial.println("All power to the engines!");
@@ -183,8 +185,8 @@ void loop() {
       }
       Serial.print("*");
     }
-    //getDistance();
-    sendToADK( random(44, 90), random(0, 4) + random(1, 3) * 100, random(150, 152));
+    getDistance();
+    //sendToADK( random(0, 2), random(0, 4) + random(1, 3) * 100, random(150, 152));
   }
   delay(DELAY);
 }
@@ -279,10 +281,12 @@ void getDistance(){
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
   //The module return an high signal with duration equal to the sound travel time
-  duration = pulseIn(ECHO_PIN, HIGH);
+  duration = pulseIn(ECHO_PIN, HIGH, 2000);
   // Divide half 
-  //distance = (duration/2) / 29.1
-  sendToADK(INFO,DISTANCE,duration);
+  distance = (duration/2) / 29.1;
+  Serial.println(duration);
+  Serial.print(distance);Serial.println("cm");
+  sendToADK(INFO,DISTANCE,(int)distance);
 }
 
 void setDirection(int side, bool direction) {

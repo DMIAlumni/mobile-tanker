@@ -65,6 +65,7 @@ public class TankLogic implements Observer {
             mCommunicator.setOutgoing(MessageEncoderDecoder.search());
             isMovingForward=false;
             lastTargetCenter = null;
+            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
             return;
         }
         //If target is not correctly aimed
@@ -72,6 +73,9 @@ public class TankLogic implements Observer {
             //power up velocity if since last frame we didn't move, and wen we start moving maintain it since aim OK
             if (isNotTurning()) {
                 turnVelocity += velocityStep;
+                if (turnVelocity>255-velocityStep)
+                    turnVelocity=MessageEncoderDecoder.DEFAULT_VELOCITY;
+                    //TODO send rover in emergency mode cause it's stuck
             }
             if (targetDirection == TARGET_POSITION_LEFT) {
                 if (isMovingForward) {
