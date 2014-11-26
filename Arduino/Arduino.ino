@@ -4,7 +4,7 @@
 #include <adk.h>
 #define BUFFSIZE   255
 #define MAX_POWER  400
-#define DELAY 50
+#define DELAY 10
 
 // Android --> Arduino codes
 #define CMD_NULL_VALUE 0
@@ -66,9 +66,10 @@ targetLeftVelocity = 0,
 targetRightVelocity = 0,
 currentLeftVelocity = 0,
 currentRightVelocity= 0,
-baseVelocity = 100,
+baseVelocity = 131,
 velocityStep= 5;
 
+long coldTimerStart;
 
 
 
@@ -90,7 +91,7 @@ ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumb
 // Debug mode for communication
 bool COM_DEBUG_MODE = false;
 // Debug mode for movment
-bool MOV_DEBUG_MODE = true;
+bool MOV_DEBUG_MODE = false;
 uint8_t inBuffer[BUFFSIZE];
 uint8_t outBuffer[BUFFSIZE];
 char inStringBuffer[BUFFSIZE];
@@ -126,16 +127,18 @@ void loop() {
     char*a;
     if (strlen(a = readFromADK()) > 0) {
       if (decodeCommand(a, &command, &param1, &param2)) {
-        Serial.print("COMMAND: Command "); Serial.print(command); Serial.print(", param1 "); Serial.print(param1); Serial.print(", param2 "); Serial.print(param2); Serial.println(", received and is beign processed!");
+        if (MOV_DEBUG_MODE){
+          Serial.print("COMMAND: Command "); Serial.print(command); Serial.print(", param1 "); Serial.print(param1); Serial.print(", param2 "); Serial.print(param2); Serial.println(", received and is beign processed!");
+        }
         switch (command) {
           case CMD_LEFT:
-          turnLeft(param1);
+          turnLeft(140);//param1
           break;
           case CMD_RIGHT:
-          turnRight(param1);
+          turnRight(140);//param1
           break;
           case CMD_STOP:
-          stop(SOFT);
+          stop(HARD);
           break;
           default:
           stop(SOFT);
@@ -143,31 +146,35 @@ void loop() {
           break;
         }
         lastCommand=command;
-        } else {
+      } 
+      else {
+        if (MOV_DEBUG_MODE){
           Serial.print("ERROR: Command "); Serial.print(command); Serial.print(", param1 "); Serial.print(param1); Serial.print(", param2 "); Serial.print(param2); Serial.println(", is not valid!");
         }
-        } else {
-          Serial.print("*");
-        }
-        sendToADK( random(0, 2), random(0, 4) + random(1, 3) * 100, random(150, 152));
       }
-      delay(DELAY);
+    } 
+    else {
+      Serial.print("*");
     }
+    sendToADK( random(0, 2), random(0, 4) + random(1, 3) * 100, random(150, 152));
+  }
+  delay(DELAY);
+}
 
-    char* readFromADK() {
-      adk.read(&bytesRead, BUFFSIZE, inBuffer);
-      memset(inStringBuffer, 0, BUFFSIZE);
-      if (bytesRead > 0) {
-        memcpy(inStringBuffer, inBuffer, bytesRead);
-        if (COM_DEBUG_MODE) {
-          Serial.print("\nReceiving | ");
-          Serial.print(inStringBuffer);
-          Serial.print(" | ");
-          Serial.print(strlen(inStringBuffer));
-          Serial.println(" bytes incoming");
-        }
-      }
-      delay(DELAY / 10);
+char* readFromADK() {
+  adk.read(&bytesRead, BUFFSIZE, inBuffer);
+  memset(inStringBuffer, 0, BUFFSIZE);
+  if (bytesRead > 0) {
+    memcpy(inStringBuffer, inBuffer, bytesRead);
+    if (COM_DEBUG_MODE) {
+      Serial.print("\nReceiving | ");
+      Serial.print(inStringBuffer);
+      Serial.print(" | ");
+      Serial.print(strlen(inStringBuffer));
+      Serial.println(" bytes incoming");
+    }
+  }
+  delay(DELAY / 10);
   return inStringBuffer; // If nothing has been read then return the previously initialized empty array
 }
 
@@ -284,44 +291,53 @@ void releaseBrake(int side) {
   }
 }
 void setSpeedAndGo(int velocityLeft, int velocityRight) {
-  targetLeftVelocity=velocityLeft;
-  targetRightVelocity=velocityRight;
-  if (currentLeftVelocity<targetLeftVelocity){
-    currentLeftVelocity+=velocityStep;
-  } 
-  else if (currentLeftVelocity>targetLeftVelocity){
-    currentLeftVelocity-=velocityStep;
+  releaseBrake(BOTH); 
+  
+  if (millis()-coldTimerStart>100 ) {
+    if ( currentLeftVelocity<velocityLeft+10 && currentLeftVelocity!=LOW){
+    currentLeftVelocity= currentLeftVelocity+velocityStep/5;
+    }
+    if (currentRightVelocity<velocityRight){
+
+
+    currentRightVelocity= currentRightVelocity+velocityStep/5;
+    
+    }
+    analogWrite(PWM_LEFT, currentLeftVelocity);
+    analogWrite(PWM_RIGHT, currentRightVelocity); 
+    Serial.println("");
+    Serial.print("Current velocity SX: ");Serial.println(currentLeftVelocity);
+    Serial.print("Current velocity DX: ");Serial.println(currentRightVelocity);
+    Serial.print(analogRead(SNS_LEFT));Serial.print("HHHH");Serial.println(analogRead(SNS_RIGHT));
+    coldTimerStart=millis();
+
   }
-  if (currentRightVelocity<targetRightVelocity){
-    currentRightVelocity+=velocityStep;
-  } 
-  else if (currentRightVelocity>targetRightVelocity){
-    currentRightVelocity-=velocityStep;
-  }
-  releaseBrake(BOTH);  
-  analogWrite(PWM_LEFT, currentLeftVelocity);
-  analogWrite(PWM_RIGHT, currentRightVelocity); 
-  delay(DELAY); 
 }
 
 
-void turnLeft(int velocity){
-  if (lastCommand!=CMD_LEFT){
-    stop(HARD);  
+  void turnLeft(int velocity){
+    if (lastCommand!=CMD_LEFT){
+      stop(HARD); 
+      coldTimerStart=millis(); 
+      currentLeftVelocity=LOW;
+      currentRightVelocity=baseVelocity;
+    }
+    setDirection(RIGHT, FORWARD);
+    setDirection(LEFT, BACKWARD);
+    setSpeedAndGo(LOW,velocity);
   }
-  setDirection(RIGHT, FORWARD);
-  setDirection(LEFT, BACKWARD);
-  setSpeedAndGo(velocity,velocity);
-}
 
-void turnRight(int velocity){
-  if (lastCommand!=CMD_RIGHT){
-   stop(HARD); 
+  void turnRight(int velocity){
+    if (lastCommand!=CMD_RIGHT){
+     stop(HARD); 
+     coldTimerStart=millis();
+     currentRightVelocity=LOW;
+     currentLeftVelocity=baseVelocity;
+   }
+   setDirection(RIGHT, BACKWARD);
+   setDirection(LEFT, FORWARD);
+   setSpeedAndGo(velocity,LOW);
  }
- setDirection(RIGHT, BACKWARD);
- setDirection(LEFT, FORWARD);
- setSpeedAndGo(velocity,velocity);
-}
 
 // with method = HARD = true it uses brakes, otherwise stop by inertia 
 void stop(bool method) {
@@ -331,6 +347,7 @@ void stop(bool method) {
     analogWrite(PWM_LEFT, LOW);
     analogWrite(PWM_RIGHT, LOW);
     } else{
+      currentRightVelocity=currentLeftVelocity=LOW;
       setSpeedAndGo(LOW,LOW);
     }
     delay(DELAY / 10);
