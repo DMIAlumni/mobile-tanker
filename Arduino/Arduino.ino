@@ -45,7 +45,7 @@ HARD = true,
 SOFT = false;
 
 // Motors definition
-//Ch A = LEFT, Ch B = RIGTH
+//Ch A = LEFT, Ch B = RIGHT
 const int
 PWM_LEFT   = 3,
 DIR_LEFT   = 12,
@@ -132,10 +132,10 @@ void loop() {
         }
         switch (command) {
           case CMD_LEFT:
-          turnLeft(140);//param1
+          turnLeft(param1);//param1
           break;
           case CMD_RIGHT:
-          turnRight(140);//param1
+          turnRight(param1);//param1
           break;
           case CMD_STOP:
           stop(HARD);
@@ -290,18 +290,58 @@ void releaseBrake(int side) {
     break;
   }
 }
+
+void turnLeft(int velocity){
+  if (lastCommand!=CMD_LEFT){
+    stop(HARD); 
+  }
+
+  setDirection(RIGHT, FORWARD);
+  setDirection(LEFT, BACKWARD);
+  //analogWrite(PWM_LEFT, velocity);
+  releaseBrake(RIGHT);
+  analogWrite(PWM_RIGHT, velocity);
+}
+
+void turnRight(int velocity){
+  if (lastCommand!=CMD_RIGHT){
+   stop(HARD); 
+
+ }
+ setDirection(RIGHT, BACKWARD);
+ setDirection(LEFT, FORWARD);
+ releaseBrake(LEFT);
+ analogWrite(PWM_LEFT, velocity);
+    //analogWrite(PWM_RIGHT, velocity);
+  }
+
+// with method = HARD = true it uses brakes, otherwise stop by inertia 
+void stop(bool method) {
+  if (method){ 
+    brake(BOTH);
+    analogWrite(PWM_LEFT, LOW);
+    analogWrite(PWM_RIGHT, LOW);
+  } 
+  else{
+    analogWrite(PWM_LEFT, LOW);
+    analogWrite(PWM_RIGHT, LOW);
+  }
+  delay(DELAY / 10);
+}
+
+
 void setSpeedAndGo(int velocityLeft, int velocityRight) {
   releaseBrake(BOTH); 
-  
+
   if (millis()-coldTimerStart>100 ) {
     if ( currentLeftVelocity<velocityLeft+10 && currentLeftVelocity!=LOW){
-    currentLeftVelocity= currentLeftVelocity+velocityStep/5;
+      currentLeftVelocity= currentLeftVelocity+velocityStep/5;
     }
     if (currentRightVelocity<velocityRight){
 
 
-    currentRightVelocity= currentRightVelocity+velocityStep/5;
-    
+      currentRightVelocity= currentRightVelocity+velocityStep/5;
+
     }
     analogWrite(PWM_LEFT, currentLeftVelocity);
     analogWrite(PWM_RIGHT, currentRightVelocity); 
@@ -315,32 +355,32 @@ void setSpeedAndGo(int velocityLeft, int velocityRight) {
 }
 
 
-  void turnLeft(int velocity){
-    if (lastCommand!=CMD_LEFT){
-      stop(HARD); 
-      coldTimerStart=millis(); 
-      currentLeftVelocity=LOW;
-      currentRightVelocity=baseVelocity;
-    }
-    setDirection(RIGHT, FORWARD);
-    setDirection(LEFT, BACKWARD);
-    setSpeedAndGo(LOW,velocity);
+void turnLeft2(int velocity){
+  if (lastCommand!=CMD_LEFT){
+    stop(HARD); 
+    coldTimerStart=millis(); 
+    currentLeftVelocity=LOW;
+    currentRightVelocity=baseVelocity;
   }
+  setDirection(RIGHT, FORWARD);
+  setDirection(LEFT, BACKWARD);
+  setSpeedAndGo(LOW,velocity);
+}
 
-  void turnRight(int velocity){
-    if (lastCommand!=CMD_RIGHT){
-     stop(HARD); 
-     coldTimerStart=millis();
-     currentRightVelocity=LOW;
-     currentLeftVelocity=baseVelocity;
-   }
-   setDirection(RIGHT, BACKWARD);
-   setDirection(LEFT, FORWARD);
-   setSpeedAndGo(velocity,LOW);
+void turnRight2(int velocity){
+  if (lastCommand!=CMD_RIGHT){
+   stop(HARD); 
+   coldTimerStart=millis();
+   currentRightVelocity=LOW;
+   currentLeftVelocity=baseVelocity;
  }
+ setDirection(RIGHT, BACKWARD);
+ setDirection(LEFT, FORWARD);
+ setSpeedAndGo(velocity,LOW);
+}
 
 // with method = HARD = true it uses brakes, otherwise stop by inertia 
-void stop(bool method) {
+void stop2(bool method) {
   if (method){ 
     brake(BOTH);
     currentRightVelocity=currentLeftVelocity=LOW;
