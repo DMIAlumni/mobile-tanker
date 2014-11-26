@@ -19,6 +19,11 @@ public class MessageEncoderDecoder {
     private final static int CMD_SHOOT = 5;
     private final static int CMD_SEARCH = 10;
 
+    //modes
+    public final static int TURN_ON_SPOT=1;
+    public final static int TURN_NORMALLY=2;
+
+
     // Arduino --> Aandroid codes
     // Message types
     private final static int INFO = 0;
@@ -37,7 +42,7 @@ public class MessageEncoderDecoder {
     private final static int DISTANCE = 203;
 
     // Defaults
-    public final static int DEFAULT_VELOCITY = 120;
+    public final static int DEFAULT_VELOCITY = 115;
 
     // Android --> Arduino messages
 
@@ -65,20 +70,20 @@ public class MessageEncoderDecoder {
         return (CMD_STOP + "," + stopTime + "," + CMD_NULL_VALUE);
     }
 
-    public static String turnLeft(int velocity) {
-        return (CMD_LEFT + "," + velocity + "," + CMD_NULL_VALUE);
+    public static String turnLeft(int velocity, int mode) {
+        return (CMD_LEFT + "," + velocity + "," + mode);
     }
 
-    public static String turnLeft() {
-        return turnLeft(DEFAULT_VELOCITY);
+    public static String turnLeft(int mode) {
+        return turnLeft(DEFAULT_VELOCITY,mode);
     }
 
-    public static String turnRight(int velocity) {
-        return (CMD_RIGHT + "," + velocity + "," + CMD_NULL_VALUE);
+    public static String turnRight(int velocity,int mode) {
+        return (CMD_RIGHT + "," + velocity + "," + mode);
     }
 
-    public static String turnRight() {
-        return turnRight(DEFAULT_VELOCITY);
+    public static String turnRight(int mode) {
+        return turnRight(DEFAULT_VELOCITY,mode);
     }
 
     public static String shoot() {

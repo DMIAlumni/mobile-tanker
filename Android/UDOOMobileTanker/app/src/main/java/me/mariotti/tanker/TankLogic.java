@@ -35,6 +35,11 @@ public class TankLogic implements Observer {
         mCommunicator.mIncomingMessageObservable.addObserver(this);
     }
 
+    @Override
+    public void update(Observable observable, Object data) {
+        decodeMessage();
+    }
+
     public void targetPosition(int position) {
         targetInSight = position != TARGET_POSITION_NONE;
         targetDirection = position;
@@ -62,29 +67,25 @@ public class TankLogic implements Observer {
         }
         //If target is not correctly aimed
         if (targetCenter.x < frameWidth / 2 - targetWidth / 2 || targetCenter.x > frameWidth / 2 + targetWidth / 2) {
+            //power up velocity if since last frame we didn't move, and wen we start moving maintain it since aim OK
             if (isNotMoving()) {
                 turnVelocity += velocityStep;
             }
             if (targetDirection == TARGET_POSITION_LEFT) {
-                mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity));
+                mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity,MessageEncoderDecoder.TURN_NORMALLY));
             }
             if (targetDirection == TARGET_POSITION_RIGHT) {
-                mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity));
+                mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
             }
         } else {
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140,140));
         }
         lastTargetCenter = targetCenter;
     }
 
     private boolean isNotMoving() {
         return lastTargetCenter!=null && Math.abs(targetCenter.x-lastTargetCenter.x)<10;
-    }
-
-    @Override
-    public void update(Observable observable, Object data) {
-        decodeMessage();
     }
 
     private void decodeMessage() {
@@ -95,7 +96,6 @@ public class TankLogic implements Observer {
         }
         //mCommunicator.setOutgoing("Ricevuto da Arudino"+mCommunicator.getIncoming());
     }
-
 
     public void frameWidth(int width) {
         frameWidth = width;

@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <adk.h>
+#define LED_GREEN 7
+#define LED_RED 14
 #define BUFFSIZE   255
 #define MAX_POWER  400
 #define DELAY 10
@@ -15,6 +17,9 @@
 #define CMD_RIGHT 4
 #define CMD_SHOOT 5
 #define CMD_SEARCH 10
+
+#define TURN_ON_SPOT 1
+#define TURN_NORMALLY 2
 
 // Arduino --> Aandroid codes
 // Message types
@@ -97,6 +102,8 @@ uint8_t outBuffer[BUFFSIZE];
 char inStringBuffer[BUFFSIZE];
 char outStringBuffer[BUFFSIZE];
 uint32_t bytesRead = 0;
+int blinkGreenTimer, blinkRedTimer;
+bool stateRed,stateGreen;
 
 
 // Test Variabiles
@@ -109,11 +116,14 @@ void setup() {
   pinMode(DIR_LEFT, OUTPUT);    // Direction pin on channel A
   pinMode(BRAKE_RIGHT, OUTPUT);  // Brake pin on channel B
   pinMode(DIR_RIGHT, OUTPUT);    // Direction pin on channel B
-
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
   Serial.begin(115200);
   delay(1000);
   Serial.println("All power to the engines!");
   stop(SOFT);
+  blinkGreenTimer=blinkRedTimer= millis();
+  stateGreen=stateRed=true;
 
 }
 
@@ -132,13 +142,16 @@ void loop() {
         }
         switch (command) {
           case CMD_LEFT:
-          turnLeft(param1);//param1
+          turnLeft(param1, param2);
           break;
           case CMD_RIGHT:
-          turnRight(param1);//param1
+          turnRight(param1, param2);
           break;
           case CMD_STOP:
           stop(HARD);
+          break;
+          case CMD_MOVE_FORWARD:
+          moveForward(param1,param2);
           break;
           default:
           stop(SOFT);
@@ -152,8 +165,18 @@ void loop() {
           Serial.print("ERROR: Command "); Serial.print(command); Serial.print(", param1 "); Serial.print(param1); Serial.print(", param2 "); Serial.print(param2); Serial.println(", is not valid!");
         }
       }
+      if (millis()-blinkGreenTimer>300){
+        stateGreen=!stateGreen;
+        blinkGreenTimer=millis();
+        digitalWrite(LED_GREEN, stateGreen);
+      }
     } 
     else {
+      if (millis()-blinkRedTimer>300){
+        stateRed=!stateRed;
+        blinkRedTimer=millis();
+        digitalWrite(LED_RED, stateRed);   
+      }
       Serial.print("*");
     }
     sendToADK( random(0, 2), random(0, 4) + random(1, 3) * 100, random(150, 152));
@@ -229,10 +252,10 @@ bool decodeCommand(char* incoming, int* command, int* param1, int* param2) {
   if (*command == CMD_STOP  && (*param1 != CMD_NULL_VALUE || *param2 != CMD_NULL_VALUE)) {
     return false;
   }
-  if (*command == CMD_LEFT  && *param2 != CMD_NULL_VALUE) {
+  if (*command == CMD_LEFT  && (*param1 == CMD_NULL_VALUE || *param2 == CMD_NULL_VALUE)) {
     return false;
   }
-  if (*command == CMD_RIGHT && *param2 != CMD_NULL_VALUE) {
+  if (*command == CMD_RIGHT && (*param1 == CMD_NULL_VALUE || *param2 == CMD_NULL_VALUE)) {
     return false;
   }
   if (COM_DEBUG_MODE || MOV_DEBUG_MODE) {
@@ -290,30 +313,40 @@ void releaseBrake(int side) {
     break;
   }
 }
+void moveForward(int velocityLeft,int velocityRight){
+  setDirection(BOTH,FORWARD);
+  releaseBrake(BOTH);
+  analogWrite(PWM_LEFT, velocityLeft);
+  analogWrite(PWM_RIGHT, velocityRight);
+}
 
-void turnLeft(int velocity){
+void turnLeft(int velocity, int mode){
   if (lastCommand!=CMD_LEFT){
     stop(HARD); 
   }
-
-  setDirection(RIGHT, FORWARD);
-  setDirection(LEFT, BACKWARD);
-  //analogWrite(PWM_LEFT, velocity);
+  setDirection(RIGHT, FORWARD);    
   releaseBrake(RIGHT);
   analogWrite(PWM_RIGHT, velocity);
+  if (mode==TURN_ON_SPOT){
+    setDirection(LEFT, BACKWARD);
+    releaseBrake(LEFT);
+    analogWrite(PWM_LEFT, velocity);
+  }
 }
 
-void turnRight(int velocity){
+void turnRight(int velocity, int mode){
   if (lastCommand!=CMD_RIGHT){
-   stop(HARD); 
-
+   stop(HARD);
  }
- setDirection(RIGHT, BACKWARD);
  setDirection(LEFT, FORWARD);
  releaseBrake(LEFT);
  analogWrite(PWM_LEFT, velocity);
-    //analogWrite(PWM_RIGHT, velocity);
-  }
+ if (mode==TURN_ON_SPOT){
+  setDirection(RIGHT, BACKWARD);
+  releaseBrake(RIGHT);
+  analogWrite(PWM_RIGHT, velocity);
+}
+}
 
 // with method = HARD = true it uses brakes, otherwise stop by inertia 
 void stop(bool method) {
