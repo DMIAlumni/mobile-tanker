@@ -43,7 +43,7 @@ public class TargetSearch {
         mTankLogic = mTankActivity.mTankLogic;
     }
 
-    public Mat searchFaces(Mat mIncomingFrame, CascadeClassifier faceCascadeClassifier) {
+    public Mat searchFaces(final Mat mIncomingFrame, CascadeClassifier faceCascadeClassifier) {
         Scalar color;
         // Create a grayscale version of the image
         Imgproc.cvtColor(mIncomingFrame, mGrayscaleImage, Imgproc.COLOR_RGBA2GRAY);
@@ -95,20 +95,29 @@ public class TargetSearch {
 
             public void run() {
                 if (mTarget != null) {
+                    mTankLogic.frameWidth(mIncomingFrame.width());
+                    mTankLogic.frameHeight(mIncomingFrame.height());
+                    mTankLogic.targetWidth(mTarget.width);
+                    mTankLogic.targetHeight(mTarget.height);
+                    mTankLogic.targetCenter(new Point(mTarget.x + mTarget.width / 2, mTarget.y + mTarget.height / 2));
                     mTextDirection.setVisibility(View.VISIBLE);
                     mImageDirection.setVisibility(View.VISIBLE);
-                    if (frameCenter.x - (mTarget.x + mTarget.width / 2) > AIM_DELTA) {
+
+                    if (frameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
                         mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
                         mTextDirection.setText("Turn Left");
+                        mTextDirection.append("" + mTarget.width);
                         mImageDirection.setImageResource(R.drawable.right);
-                    } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < -AIM_DELTA) {
+                    } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
                         mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
                         mImageDirection.setImageResource(R.drawable.left);
                         mTextDirection.setText("Turn Right");
+                        mTextDirection.append(""+mTarget.width);
                     } else {
                         mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
                         mImageDirection.setImageResource(R.drawable.ok);
                         mTextDirection.setText("STOP!");
+                        mTextDirection.append(""+mTarget.width);
                     }
                 } else {
                     mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);

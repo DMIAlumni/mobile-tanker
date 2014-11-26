@@ -2,6 +2,7 @@ package me.mariotti.tanker;
 
 import me.mariotti.tanker.messaging.Communicator;
 import me.mariotti.tanker.messaging.MessageEncoderDecoder;
+import org.opencv.core.Point;
 
 import java.util.HashMap;
 import java.util.Observable;
@@ -18,6 +19,15 @@ public class TankLogic implements Observer {
     private HashMap<String, Integer> incomingMessage;
     private Boolean targetInSight = false;
     private int targetDirection;
+    private Point targetCenter;
+    private Point lastTargetCenter;
+    private int targetWidth;
+    private int targetHeight;
+    private int distanceFromCenter;
+    private int frameHeight;
+    private int frameWidth;
+    private int turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+    private int velocityStep = 1;
 
 
     public TankLogic(Communicator mCommunicator) {
@@ -31,21 +41,45 @@ public class TankLogic implements Observer {
         think();
     }
 
+    public void targetCenter(Point point) {
+        targetCenter = point;
+    }
+
+    public void targetWidth(int width) {
+        targetWidth = width;
+    }
+
+    public void targetHeight(int height) {
+        targetHeight = height;
+    }
+
     private void think() {
-        switch (targetDirection) {
-            case TARGET_POSITION_LEFT:
-                mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft());
-                break;
-            case TARGET_POSITION_RIGHT:
-                mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight());
-                break;
-            case TARGET_POSITION_FRONT:
-                mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-                break;
-            case TARGET_POSITION_NONE:
-                mCommunicator.setOutgoing(MessageEncoderDecoder.search());
-                break;
+
+        if (!targetInSight) {
+            mCommunicator.setOutgoing(MessageEncoderDecoder.search());
+            lastTargetCenter = null;
+            return;
         }
+        //If target is not correctly aimed
+        if (targetCenter.x < frameWidth / 2 - targetWidth / 2 || targetCenter.x > frameWidth / 2 + targetWidth / 2) {
+            if (isNotMoving()) {
+                turnVelocity += velocityStep;
+            }
+            if (targetDirection == TARGET_POSITION_LEFT) {
+                mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity));
+            }
+            if (targetDirection == TARGET_POSITION_RIGHT) {
+                mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity));
+            }
+        } else {
+            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+        }
+        lastTargetCenter = targetCenter;
+    }
+
+    private boolean isNotMoving() {
+        return lastTargetCenter!=null && Math.abs(targetCenter.x-lastTargetCenter.x)<10;
     }
 
     @Override
@@ -60,5 +94,14 @@ public class TankLogic implements Observer {
             //mCommunicator.setOutgoing(incomingMessage.toString());
         }
         //mCommunicator.setOutgoing("Ricevuto da Arudino"+mCommunicator.getIncoming());
+    }
+
+
+    public void frameWidth(int width) {
+        frameWidth = width;
+    }
+
+    public void frameHeight(int height) {
+        frameHeight = height;
     }
 }

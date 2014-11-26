@@ -37,7 +37,7 @@ public class MessageEncoderDecoder {
     private final static int DISTANCE = 203;
 
     // Defaults
-    private final static int DEFAULT_VELOCITY = 140;
+    public final static int DEFAULT_VELOCITY = 120;
 
     // Android --> Arduino messages
 

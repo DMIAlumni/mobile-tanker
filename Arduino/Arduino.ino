@@ -91,7 +91,7 @@ ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumb
 // Debug mode for communication
 bool COM_DEBUG_MODE = false;
 // Debug mode for movment
-bool MOV_DEBUG_MODE = false;
+bool MOV_DEBUG_MODE = true;
 uint8_t inBuffer[BUFFSIZE];
 uint8_t outBuffer[BUFFSIZE];
 char inStringBuffer[BUFFSIZE];
@@ -127,7 +127,7 @@ void loop() {
     char*a;
     if (strlen(a = readFromADK()) > 0) {
       if (decodeCommand(a, &command, &param1, &param2)) {
-        if (MOV_DEBUG_MODE){
+        if (MOV_DEBUG_MODE && (command == CMD_LEFT || command== CMD_RIGHT)){
           Serial.print("COMMAND: Command "); Serial.print(command); Serial.print(", param1 "); Serial.print(param1); Serial.print(", param2 "); Serial.print(param2); Serial.println(", received and is beign processed!");
         }
         switch (command) {
