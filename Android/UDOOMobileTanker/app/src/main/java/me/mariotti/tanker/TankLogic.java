@@ -1,10 +1,10 @@
 package me.mariotti.tanker;
 
 import me.mariotti.tanker.messaging.Communicator;
+import me.mariotti.tanker.messaging.DecodedMessage;
 import me.mariotti.tanker.messaging.MessageEncoderDecoder;
 import org.opencv.core.Point;
 
-import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -16,7 +16,7 @@ public class TankLogic implements Observer {
     private final String TAG = "TankLogic";
     private Communicator mCommunicator;
     private String incomingMessageTemp;
-    private HashMap<String, Integer> incomingMessage;
+    private DecodedMessage incomingMessage;
     private Boolean targetInSight = false;
     private int targetDirection;
     private Point targetCenter;
@@ -29,6 +29,7 @@ public class TankLogic implements Observer {
     private int turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
     private int velocityStep = 1;
     private boolean isMovingForward;
+    private int distance =Integer.MAX_VALUE;
 
 
     public TankLogic(Communicator mCommunicator) {
@@ -60,7 +61,14 @@ public class TankLogic implements Observer {
     }
 
     private void think() {
-
+        // Logic for target not in sight
+        if (distance!=0 && distance <20uu333iiiiiiiiiiiiiiiiiiii ){
+            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+            isMovingForward=false;
+            lastTargetCenter = null;
+            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+            return;
+        }
         if (!targetInSight) {
             mCommunicator.setOutgoing(MessageEncoderDecoder.search());
             isMovingForward=false;
@@ -68,7 +76,7 @@ public class TankLogic implements Observer {
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
             return;
         }
-        //If target is not correctly aimed
+       // Target in sight
         if (targetCenter.x < frameWidth / 2 - targetWidth / 2 || targetCenter.x > frameWidth / 2 + targetWidth / 2) {
             //power up velocity if since last frame we didn't move, and wen we start moving maintain it since aim OK
             if (isNotTurning()) {
@@ -77,6 +85,7 @@ public class TankLogic implements Observer {
                     turnVelocity=MessageEncoderDecoder.DEFAULT_VELOCITY;
                     //TODO send rover in emergency mode cause it's stuck
             }
+            //target not aimed
             if (targetDirection == TARGET_POSITION_LEFT) {
                 if (isMovingForward) {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140, 200));
@@ -93,7 +102,7 @@ public class TankLogic implements Observer {
                     isMovingForward=false;
                 }
             }
-        } else {
+        } else {// Target aimed
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
             mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140, 140));
             isMovingForward = true;
@@ -107,7 +116,10 @@ public class TankLogic implements Observer {
 
     private void decodeMessage() {
         incomingMessage = MessageEncoderDecoder.decodeIncomingMessage(mCommunicator.getIncoming());
-        if (incomingMessage.get("ERROR") != -1) {
+        if (!incomingMessage.hasError()) {
+            if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()){
+                distance = incomingMessage.getData();
+            }
             // Do things
             //mCommunicator.setOutgoing(incomingMessage.toString());
         }

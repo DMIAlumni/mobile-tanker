@@ -2,11 +2,11 @@
 
 #include <stdio.h>
 #include <adk.h>
-#define LED_GREEN 7
-#define LED_RED 14
+#define LED_GREEN 53
+#define LED_RED 52
 #define BUFFSIZE   255
 #define MAX_POWER  400
-#define DELAY 40 // Smaller delay breaks everything about communication
+#define DELAY 50 // Smaller delay breaks everything about communication
 
 // Android --> Arduino codes
 #define CMD_NULL_VALUE 0
@@ -160,7 +160,7 @@ void loop() {
           moveForward(param1,param2);
           break;
           default:
-          stop(SOFT);
+          stop(HARD);
           Serial.println("Default Block");
           break;
         }
@@ -281,10 +281,9 @@ void getDistance(){
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
   //The module return an high signal with duration equal to the sound travel time
-  duration = pulseIn(ECHO_PIN, HIGH, 2000);
+  duration = pulseIn(ECHO_PIN, HIGH, 2000);//ignores target far more than 71cm
   // Divide half 
-  distance = (duration/2) / 29.1;
-  Serial.println(duration);
+  distance = (duration/2) / 29.1;  
   Serial.print(distance);Serial.println("cm");
   sendToADK(INFO,DISTANCE,(int)distance);
 }

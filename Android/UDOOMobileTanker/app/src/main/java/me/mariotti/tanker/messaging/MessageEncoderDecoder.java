@@ -1,5 +1,6 @@
 package me.mariotti.tanker.messaging;
 
+import android.text.TextUtils;
 import android.util.Log;
 import me.mariotti.tanker.TankActivity;
 
@@ -26,13 +27,13 @@ public class MessageEncoderDecoder {
 
     // Arduino --> Aandroid codes
     // Message types
-    private final static int INFO = 0;
-    private final static int STATE = 1;
+    protected final static int INFO = 0;
+    protected final static int STATE = 1;
     // States
     private final static int IDLE = 100;
-    private final static int SEARCHING = 101;
-    private final static int HUNTING = 102;
-    private final static int EMERGENCY = 103;
+    public final static int SEARCHING = 101;
+    public final static int HUNTING = 102;
+    public final static int EMERGENCY = 103;
     // Actions
     private final static int STOPPED = 150;
     private final static int MOVING = 151;
@@ -94,13 +95,22 @@ public class MessageEncoderDecoder {
         return (CMD_SEARCH + "," + CMD_NULL_VALUE + "," + CMD_NULL_VALUE);
     }
 
+    public static DecodedMessage decodeIncomingMessage(String mIncomingMessage) {
+        if (!TextUtils.isEmpty(mIncomingMessage)){
+            ArrayList<String> splittedMessage = new ArrayList<String>(Arrays.asList(mIncomingMessage.split(",")));
+            return new DecodedMessage(splittedMessage);
+        }
+        return new DecodedMessage(-1,-1,-1,-1);
+    }
+
     // Arduino --> Android messages
-    public static HashMap<String, Integer> decodeIncomingMessage(String mIncomingMessage) {
+    /*public static HashMap<String, Integer> decodeIncomingMessage(String mIncomingMessage) {
         if (TankActivity.DEBUG) {
             Log.i(TAG, "mIncomingMessage: " + mIncomingMessage);
         }
         HashMap<String, Integer> parsedMessage = new HashMap<String, Integer>(3);
         ArrayList<String> splittedMessage = new ArrayList<String>(Arrays.asList(mIncomingMessage.split(",")));
+
         int messageType = Integer.valueOf(splittedMessage.get(0));
 
         switch (messageType) {
@@ -130,5 +140,5 @@ public class MessageEncoderDecoder {
             Log.i(TAG, "parsedMessage: " + parsedMessage.toString());
         }
         return parsedMessage;
-    }
+    }*/
 }
