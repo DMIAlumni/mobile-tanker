@@ -130,6 +130,8 @@ void setup() {
   stop(SOFT);
   blinkGreenTimer=blinkRedTimer= millis();
   stateGreen=stateRed=true;
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_GREEN, LOW);
 
 }
 

@@ -62,7 +62,7 @@ public class TankLogic implements Observer {
 
     private void think() {
         // Logic for target not in sight
-        if (distance!=0 && distance <20uu333iiiiiiiiiiiiiiiiiiii ){
+        if (distance!=0 && distance <20 ){
             mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
             isMovingForward=false;
             lastTargetCenter = null;
