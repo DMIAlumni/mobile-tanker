@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <adk.h>
 #define LED_GREEN 53
-#define LED_RED 52
+#define LED_YELLOW 52
+#define LED_RED 7
 #define BUFFSIZE   255
 #define MAX_POWER  400
 #define DELAY 50 // Smaller delay breaks everything about communication
@@ -41,6 +42,8 @@
 //Ultrasonic Ranging Module
 #define TRIG_PIN 2
 #define ECHO_PIN 4
+//Emergency Sensors
+#define FL A5
 
 const int
 LEFT = 0,
@@ -98,7 +101,7 @@ USBHost Usb;
 ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumber);
 // End ADK configuration
 // Debug mode for communication
-bool COM_DEBUG_MODE = true;
+bool COM_DEBUG_MODE = false;
 // Debug mode for movment
 bool MOV_DEBUG_MODE = false;
 uint8_t inBuffer[BUFFSIZE];
@@ -108,11 +111,14 @@ char outStringBuffer[BUFFSIZE];
 uint32_t bytesRead = 0;
 int blinkGreenTimer, blinkRedTimer;
 bool stateRed,stateGreen;
+bool emergency_mode,warning;
+int emergency_sensor_threshold =900;
 
 
 // Test Variabiles
 int randomint;
 int last_send = 0;
+
 
 void setup() {
   // Configure the A output
@@ -121,25 +127,46 @@ void setup() {
   pinMode(BRAKE_RIGHT, OUTPUT);  // Brake pin on channel B
   pinMode(DIR_RIGHT, OUTPUT);    // Direction pin on channel B
   pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_YELLOW, OUTPUT);
   pinMode(LED_RED, OUTPUT);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  //pinMode(FL, INPUT);
   Serial.begin(115200);
   delay(1000);
   Serial.println("All power to the engines!");
   stop(SOFT);
   blinkGreenTimer=blinkRedTimer= millis();
   stateGreen=stateRed=true;
+  emergency_mode=warning=false;
   digitalWrite(LED_GREEN, LOW);
-  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_RED, LOW);
 
 }
 
 void loop() {
-  if (COM_DEBUG_MODE) {
-    Serial.print(".");
+  //Go in emergency mode after two bad readings from sensor
+  if (MOV_DEBUG_MODE){
+    Serial.print("FL reading: ");
+    Serial.println(analogRead(FL));
   }
-  Usb.Task();
+  Serial.print("FL reading: ");
+    Serial.println(analogRead(FL));
+  if (analogRead(FL)>emergency_sensor_threshold && warning){
+    emergency_mode=true;    
+    emergency();
+    }else if (analogRead(FL)>emergency_sensor_threshold && !warning){
+      warning=true;
+      Serial.println("Emergency warning");
+    } 
+    else {
+      warning=false;
+    }
+    if (COM_DEBUG_MODE) {
+      Serial.print(".");
+    }
+    Usb.Task();
   // Check that ADK is available
   if (adk.isReady()) {
     char*a;
@@ -163,7 +190,9 @@ void loop() {
           break;
           default:
           stop(HARD);
-          Serial.println("Default Block");
+          if (COM_DEBUG_MODE) {
+            Serial.println("Default Block");
+          }
           break;
         }
         lastCommand=command;
@@ -183,7 +212,7 @@ void loop() {
       if (millis()-blinkRedTimer>300){
         stateRed=!stateRed;
         blinkRedTimer=millis();
-        digitalWrite(LED_RED, stateRed);   
+        digitalWrite(LED_YELLOW, stateRed);   
       }
       Serial.print("*");
     }
@@ -285,8 +314,10 @@ void getDistance(){
   //The module return an high signal with duration equal to the sound travel time
   duration = pulseIn(ECHO_PIN, HIGH, 2000);//ignores target far more than 71cm
   // Divide half 
-  distance = (duration/2) / 29.1;  
-  Serial.print(distance);Serial.println("cm");
+  distance = (duration/2) / 29.1; 
+  if (COM_DEBUG_MODE) { 
+    Serial.print(distance);Serial.println("cm");
+  }
   sendToADK(INFO,DISTANCE,(int)distance);
 }
 
@@ -343,6 +374,13 @@ void moveForward(int velocityLeft,int velocityRight){
   analogWrite(PWM_RIGHT, velocityRight);
 }
 
+void moveBackward(int velocityLeft,int velocityRight){
+  setDirection(BOTH,BACKWARD);
+  releaseBrake(BOTH);
+  analogWrite(PWM_LEFT, velocityLeft);
+  analogWrite(PWM_RIGHT, velocityRight);
+}
+
 void turnLeft(int velocity, int mode){
   if (lastCommand!=CMD_LEFT){
     stop(HARD); 
@@ -385,6 +423,22 @@ void stop(bool method) {
   delay(DELAY / 10);
 }
 
+void emergency(){
+  Serial.println("****EMERGENCY***");
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_RED, HIGH);
+  // rescue action
+  stop(HARD);
+  moveBackward(170,140);
+  delay(1000);
+  stop(SOFT);
+    //TODO if is not all ok, call it recursively
+    emergency_mode=warning=false;
+  //
+  Serial.println("EMERGENCY ENDED");
+  digitalWrite(LED_RED, LOW);
+}
 
 void setSpeedAndGo(int velocityLeft, int velocityRight) {
   releaseBrake(BOTH); 

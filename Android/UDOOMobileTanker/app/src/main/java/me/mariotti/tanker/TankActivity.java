@@ -17,6 +17,7 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.objdetect.CascadeClassifier;
@@ -103,6 +104,8 @@ public class TankActivity extends Activity implements CvCameraViewListener {
 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
+        //flip horizontally and vertically due to camera physical position
+        Core.flip(aInputFrame,aInputFrame,-1);
         return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
         //return mTargetSearch.searchContour(aInputFrame);
         //return mTargetSearch.searchColours(aInputFrame);
