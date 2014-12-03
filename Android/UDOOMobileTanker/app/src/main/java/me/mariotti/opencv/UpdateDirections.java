@@ -47,18 +47,18 @@ public class UpdateDirections implements Runnable {
             if (frameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
                 mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
                 mTextDirection.setText("Turn Left");
-                mTextDirection.append("" + mTarget.width);
+                mTextDirection.append("\nTarget Area = " + mTarget.width*mTarget.height);
                 mImageDirection.setImageResource(R.drawable.right);
             } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
                 mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
                 mImageDirection.setImageResource(R.drawable.left);
                 mTextDirection.setText("Turn Right");
-                mTextDirection.append("" + mTarget.width);
+                mTextDirection.append("\nTarget Area = " + mTarget.width*mTarget.height);
             } else {
                 mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
                 mImageDirection.setImageResource(R.drawable.ok);
                 mTextDirection.setText("STOP!");
-                mTextDirection.append("" + mTarget.width);
+                mTextDirection.append("\nTarget Area = " + mTarget.width*mTarget.height);
             }
         } else {
             mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
