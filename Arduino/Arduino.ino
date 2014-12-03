@@ -5,6 +5,7 @@
 #define LED_GREEN 53
 #define LED_YELLOW 52
 #define LED_RED 7
+#define TERMINATE_BUTTON 51
 #define BUFFSIZE   255
 #define MAX_POWER  400
 #define DELAY 50 // Smaller delay breaks everything about communication
@@ -38,13 +39,16 @@
 #define SHOOTED 201
 #define RELOADED 202
 #define DISTANCE 203
+#define TERMINATE 999
 
 //Ultrasonic Ranging Module
 #define TRIG_PIN 2
 #define ECHO_PIN 4
+
 //Emergency Sensors
 #define FL A5
 #define FR A4
+
 
 const int
 LEFT = 0,
@@ -102,7 +106,7 @@ USBHost Usb;
 ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumber);
 // End ADK configuration
 // Debug mode for communication
-bool COM_DEBUG_MODE = false;
+bool COM_DEBUG_MODE = true;
 // Debug mode for movment
 bool MOV_DEBUG_MODE = false;
 uint8_t inBuffer[BUFFSIZE];
@@ -132,6 +136,7 @@ void setup() {
   pinMode(LED_RED, OUTPUT);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  pinMode(TERMINATE_BUTTON, INPUT);
   //pinMode(FL, INPUT);
   Serial.begin(115200);
   delay(1000);
@@ -143,17 +148,20 @@ void setup() {
   digitalWrite(LED_GREEN, LOW);
   digitalWrite(LED_YELLOW, LOW);
   digitalWrite(LED_RED, LOW);
-
 }
 
 void loop() {
+  if (digitalRead(TERMINATE_BUTTON)==HIGH){    
+    terminateAndroidApp();
+    stop(HARD);
+    Serial.println("Android App Closed. Push reset button to restart all.");
+    while(1);
+  }
   //Go in emergency mode after two bad readings from sensor
   if (MOV_DEBUG_MODE){
     Serial.print("FL reading: ");
     Serial.println(analogRead(FL));
   }
-  Serial.print("FL reading: ");
-  Serial.println(analogRead(FL));
   if (!sensorsOk() && warning){
     emergency_mode=true;    
     emergency();
@@ -445,6 +453,10 @@ void emergency(){
 
 bool sensorsOk(){
   return analogRead(FL)<emergency_sensor_threshold && analogRead(FR)<emergency_sensor_threshold;
+}
+
+void terminateAndroidApp(){
+  sendToADK(INFO,TERMINATE,CMD_NULL_VALUE);  
 }
 
 void setSpeedAndGo(int velocityLeft, int velocityRight) {
