@@ -6,7 +6,7 @@ import java.util.ArrayList;
 //Message pattern: msgType,msg,data
 public class DecodedMessage {
     private int msgType;
-    private int msg;
+    public int msg;
     private int data;
     private int error;
 
@@ -46,6 +46,10 @@ public class DecodedMessage {
 
     public boolean isStateMessage() {
         return msgType == MessageEncoderDecoder.STATE;
+    }
+
+    public boolean isTerminateCommand() {
+        return msgType == MessageEncoderDecoder.INFO && msg==MessageEncoderDecoder.TERMINATE;
     }
 
     public boolean hasDistance() {

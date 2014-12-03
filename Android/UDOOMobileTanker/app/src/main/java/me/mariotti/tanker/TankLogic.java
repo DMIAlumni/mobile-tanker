@@ -15,6 +15,7 @@ public class TankLogic implements Observer {
     public final static int TARGET_POSITION_NONE = 0;
     private final String TAG = "TankLogic";
     private Communicator mCommunicator;
+    private TankActivity mTankActivity;
     private String incomingMessageTemp;
     private DecodedMessage incomingMessage;
     private Boolean targetInSight = false;
@@ -32,8 +33,9 @@ public class TankLogic implements Observer {
     private int distance = Integer.MAX_VALUE;
 
 
-    public TankLogic(Communicator mCommunicator) {
+    public TankLogic(Communicator mCommunicator, TankActivity tankActivity) {
         this.mCommunicator = mCommunicator;
+        mTankActivity = tankActivity;
         mCommunicator.mIncomingMessageObservable.addObserver(this);
     }
 
@@ -122,6 +124,10 @@ public class TankLogic implements Observer {
         if (!incomingMessage.hasError()) {
             if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()) {
                 distance = incomingMessage.getData();
+            }
+            if (incomingMessage.isTerminateCommand()){
+                mTankActivity.finish();
+
             }
             // Do things
             //mCommunicator.setOutgoing(incomingMessage.toString());

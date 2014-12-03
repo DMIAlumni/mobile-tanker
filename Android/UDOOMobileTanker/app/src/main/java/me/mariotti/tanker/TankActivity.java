@@ -84,7 +84,7 @@ public class TankActivity extends Activity implements CvCameraViewListener {
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
 
         mCommunicator = new Communicator(this);
-        mTankLogic=new TankLogic(mCommunicator);
+        mTankLogic=new TankLogic(mCommunicator,this);
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
