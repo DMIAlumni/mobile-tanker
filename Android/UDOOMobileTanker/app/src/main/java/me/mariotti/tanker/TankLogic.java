@@ -29,7 +29,7 @@ public class TankLogic implements Observer {
     private int turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
     private int velocityStep = 1;
     private boolean isMovingForward;
-    private int distance =Integer.MAX_VALUE;
+    private int distance = Integer.MAX_VALUE;
 
 
     public TankLogic(Communicator mCommunicator) {
@@ -62,28 +62,31 @@ public class TankLogic implements Observer {
 
     private void think() {
         // Logic for target not in sight
-        if (distance!=0 && distance <20 ){
+        if (distance != 0 && distance < 20) {
             mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-            isMovingForward=false;
+            isMovingForward = false;
             lastTargetCenter = null;
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
             return;
         }
         if (!targetInSight) {
             mCommunicator.setOutgoing(MessageEncoderDecoder.search());
-            isMovingForward=false;
+            isMovingForward = false;
             lastTargetCenter = null;
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
             return;
         }
-       // Target in sight
+        //if target is thinner than 100px consider it 100px width
+        targetWidth = targetWidth < 100 ? 100 : targetWidth;
+        // Target in sight
         if (targetCenter.x < frameWidth / 2 - targetWidth / 2 || targetCenter.x > frameWidth / 2 + targetWidth / 2) {
+            //TODO add a minimum width of target
             //power up velocity if since last frame we didn't move, and wen we start moving maintain it since aim OK
             if (isNotTurning()) {
                 turnVelocity += velocityStep;
-                if (turnVelocity>255-velocityStep)
-                    turnVelocity=MessageEncoderDecoder.DEFAULT_VELOCITY;
-                    //TODO send rover in emergency mode cause it's stuck
+                if (turnVelocity > 255 - velocityStep)
+                    turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                //TODO send rover in emergency mode cause it's stuck
             }
             //target not aimed
             if (targetDirection == TARGET_POSITION_LEFT) {
@@ -91,7 +94,7 @@ public class TankLogic implements Observer {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140, 200));
                 } else {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
-                    isMovingForward=false;
+                    isMovingForward = false;
                 }
             }
             if (targetDirection == TARGET_POSITION_RIGHT) {
@@ -99,7 +102,7 @@ public class TankLogic implements Observer {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(200, 140));
                 } else {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
-                    isMovingForward=false;
+                    isMovingForward = false;
                 }
             }
         } else {// Target aimed
@@ -117,7 +120,7 @@ public class TankLogic implements Observer {
     private void decodeMessage() {
         incomingMessage = MessageEncoderDecoder.decodeIncomingMessage(mCommunicator.getIncoming());
         if (!incomingMessage.hasError()) {
-            if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()){
+            if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()) {
                 distance = incomingMessage.getData();
             }
             // Do things

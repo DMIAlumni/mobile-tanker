@@ -106,9 +106,9 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     public Mat onCameraFrame(Mat aInputFrame) {
         //flip horizontally and vertically due to camera physical position
         Core.flip(aInputFrame,aInputFrame,-1);
-        return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
+        //return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
         //return mTargetSearch.searchContour(aInputFrame);
-        //return mTargetSearch.searchColours(aInputFrame);
+        return mTargetSearch.searchColours(aInputFrame);
     }
 
     @Override

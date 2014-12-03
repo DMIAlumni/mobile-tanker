@@ -13,6 +13,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -32,8 +33,14 @@ public class TargetSearch {
     private static final Scalar RED = new Scalar(255, 0, 0);
     private static final Scalar GREEN = new Scalar(0, 255, 0);
     private static final Scalar BLUE = new Scalar(0, 0, 255);
+    private static final Scalar BLUE_BOX = new Scalar(0, 12, 127);
+    private static final Scalar RED_NOTEBOOK = new Scalar(255, 48, 48);
+    private static final Scalar YELLOW_SUGAR = new Scalar(255,230,48);
+
     //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
     private static final int AIM_DELTA = 50;
+    UpdateDirections directionsUpdater = null;
+    Rect nullTarget;
 
     public TargetSearch(TankActivity mTankActivity) {
         this.mTankActivity = mTankActivity;
@@ -41,6 +48,7 @@ public class TargetSearch {
         mImageDirection.setImageResource(R.drawable.ok);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
         mTankLogic = mTankActivity.mTankLogic;
+        nullTarget = new Rect(0, 0, 0, 0);
     }
 
     public Mat searchFaces(final Mat mIncomingFrame, CascadeClassifier faceCascadeClassifier) {
@@ -112,12 +120,12 @@ public class TargetSearch {
                         mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
                         mImageDirection.setImageResource(R.drawable.left);
                         mTextDirection.setText("Turn Right");
-                        mTextDirection.append(""+mTarget.width);
+                        mTextDirection.append("" + mTarget.width);
                     } else {
                         mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
                         mImageDirection.setImageResource(R.drawable.ok);
                         mTextDirection.setText("STOP!");
-                        mTextDirection.append(""+mTarget.width);
+                        mTextDirection.append("" + mTarget.width);
                     }
                 } else {
                     mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
@@ -147,27 +155,20 @@ public class TargetSearch {
     }
 
     public Mat searchColours(Mat incomingFrame) {
+        Point frameCenter = new Point(incomingFrame.width() / 2, incomingFrame.height() / 2);
+        int minDetectArea = 5000;
         Mat mRgba;
-        Scalar mBlobColorRgba = new Scalar(255, 127, 81);
-        Scalar mBlobColorHsv;
+        Scalar mTargetColorRgba;
+        Scalar mTargetColorHsv;
         ColorBlobDetector mDetector = new ColorBlobDetector();
-        Scalar mColorRadius = new Scalar(10, 70, 50, 0);
         Mat mSpectrum = new Mat();
         Size SPECTRUM_SIZE = new Size(200, 64);
-        Scalar CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
-
-        /*SPECTRUM_SIZE = new Size(200, 64);
-        CONTOUR_COLOR = new Scalar(0, 255, 0, 255);
-        mRgba = new Mat(480, 720, CvType.CV_8UC4);
-        mDetector = new ColorBlobDetector();
-        mSpectrum = new Mat();
-        */
-        //mBlobColorRgba = new Scalar(255,230,48); // Sugar
-        mBlobColorRgba = new Scalar(255, 48, 48); // Red Notebook
-        //mColorRadius = new Scalar(10, 70, 50, 0);
-        mBlobColorHsv = mDetector.converScalarRgba2Hsv(mBlobColorRgba);
+        Scalar CONTOUR_COLOR = GREEN;
+        mTargetColorRgba = BLUE_BOX;
+        Scalar mColorRadius = new Scalar(10, 70, 70, 0);
+        mTargetColorHsv = mDetector.converScalarRgba2Hsv(mTargetColorRgba);
         mDetector.setColorRadius(mColorRadius);
-        mDetector.setHsvColor(mBlobColorHsv);
+        mDetector.setHsvColor(mTargetColorHsv);
 
         mRgba = incomingFrame;
         mDetector.process(mRgba);
@@ -175,14 +176,37 @@ public class TargetSearch {
         List<MatOfPoint> contours = mDetector.getContours();
         Log.e(TAG, "Contours count: " + contours.size());
         Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
+        LinkedList<Rect> rects = new LinkedList<Rect>();
+        Rect targetRect = nullTarget;
+        for (MatOfPoint contour : contours) {
+            Rect tempRect = Imgproc.boundingRect(contour);
+            if (rectArea(tempRect) >= minDetectArea) {
+                rects.add(tempRect);
+                Core.rectangle(mRgba, rects.getLast().tl(), rects.getLast().br(), BLUE, 1);
+                if (rectArea(tempRect) > rectArea(targetRect)) {
+                    targetRect = tempRect;
+                }
+            }
+        }
+        Core.rectangle(mRgba, targetRect.tl(), targetRect.br(), RED, 3);
 
         Mat colorLabel = mRgba.submat(4, 68, 4, 68);
-        colorLabel.setTo(mBlobColorRgba);
+        colorLabel.setTo(mTargetColorRgba);
         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
         Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
         mSpectrum.copyTo(spectrumLabel);
 
+        if (directionsUpdater == null) {
+            directionsUpdater = new UpdateDirections(mTankActivity, frameCenter, mRgba.height(), mRgba.width(),nullTarget);
+        }
+        directionsUpdater.setTarget(targetRect);
+        mTankActivity.runOnUiThread(directionsUpdater);
+
         return mRgba;
+    }
+
+    int rectArea(Rect mRect) {
+        return mRect.width * mRect.height;
     }
 
     public void setAbsoluteFaceSize(int absoluteFaceSize) {

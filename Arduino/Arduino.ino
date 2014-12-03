@@ -44,6 +44,7 @@
 #define ECHO_PIN 4
 //Emergency Sensors
 #define FL A5
+#define FR A4
 
 const int
 LEFT = 0,
@@ -152,21 +153,23 @@ void loop() {
     Serial.println(analogRead(FL));
   }
   Serial.print("FL reading: ");
-    Serial.println(analogRead(FL));
-  if (analogRead(FL)>emergency_sensor_threshold && warning){
+  Serial.println(analogRead(FL));
+  if (!sensorsOk() && warning){
     emergency_mode=true;    
     emergency();
-    }else if (analogRead(FL)>emergency_sensor_threshold && !warning){
-      warning=true;
-      Serial.println("Emergency warning");
-    } 
-    else {
-      warning=false;
-    }
-    if (COM_DEBUG_MODE) {
-      Serial.print(".");
-    }
-    Usb.Task();
+  }else if (!sensorsOk() && !warning){
+    warning=true;
+    Serial.println("Emergency warning");
+  } 
+  else {
+    warning=false;
+  }
+  if (COM_DEBUG_MODE) {
+    Serial.print(".");
+  }
+
+
+  Usb.Task();
   // Check that ADK is available
   if (adk.isReady()) {
     char*a;
@@ -438,6 +441,10 @@ void emergency(){
   //
   Serial.println("EMERGENCY ENDED");
   digitalWrite(LED_RED, LOW);
+}
+
+bool sensorsOk(){
+  return analogRead(FL)<emergency_sensor_threshold && analogRead(FR)<emergency_sensor_threshold;
 }
 
 void setSpeedAndGo(int velocityLeft, int velocityRight) {
