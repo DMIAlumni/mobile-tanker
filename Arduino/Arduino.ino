@@ -114,8 +114,8 @@ uint8_t outBuffer[BUFFSIZE];
 char inStringBuffer[BUFFSIZE];
 char outStringBuffer[BUFFSIZE];
 uint32_t bytesRead = 0;
-int blinkGreenTimer, blinkRedTimer;
-bool stateRed,stateGreen;
+int blinkGreenTimer, blinkYellowTimer;
+bool stateYellow,stateGreen;
 bool emergency_mode,warning;
 int emergency_sensor_threshold =900;
 
@@ -142,8 +142,8 @@ void setup() {
   delay(1000);
   Serial.println("All power to the engines!");
   stop(SOFT);
-  blinkGreenTimer=blinkRedTimer= millis();
-  stateGreen=stateRed=true;
+  blinkGreenTimer=blinkYellowTimer= millis();
+  stateGreen=stateYellow=true;
   emergency_mode=warning=false;
   digitalWrite(LED_GREEN, LOW);
   digitalWrite(LED_YELLOW, LOW);
@@ -217,13 +217,16 @@ void loop() {
         stateGreen=!stateGreen;
         blinkGreenTimer=millis();
         digitalWrite(LED_GREEN, stateGreen);
+        digitalWrite(LED_YELLOW, LOW);
       }
     } 
     else {
-      if (millis()-blinkRedTimer>300){
-        stateRed=!stateRed;
-        blinkRedTimer=millis();
-        digitalWrite(LED_YELLOW, stateRed);   
+      //if we didn't receive nothing from adk and last receiver (blink) was more than 600ms ago
+      if (millis()-blinkYellowTimer>300&& millis()-blinkGreenTimer>600){
+        digitalWrite(LED_GREEN, LOW);
+        stateYellow=!stateYellow;
+        blinkYellowTimer=millis();
+        digitalWrite(LED_YELLOW, stateYellow);   
       }
       Serial.print("*");
     }
