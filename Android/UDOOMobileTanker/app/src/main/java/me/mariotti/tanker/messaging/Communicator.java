@@ -92,4 +92,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     public void setKeepAlive(boolean mKeepAlive) {
         this.mKeepAlive = mKeepAlive;
     }
+    public boolean getKeepAlive() {
+        return this.mKeepAlive;
+    }
 }

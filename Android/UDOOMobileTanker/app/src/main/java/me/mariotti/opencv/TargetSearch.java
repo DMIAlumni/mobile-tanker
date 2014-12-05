@@ -8,6 +8,8 @@ import android.widget.TextView;
 import me.mariotti.tanker.TankLogic;
 import me.mariotti.tanker.R;
 import me.mariotti.tanker.TankActivity;
+import me.mariotti.voice.VoiceActivity;
+import me.mariotti.voice.VoiceColorRecognization;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
@@ -17,7 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class TargetSearch {
+public class TargetSearch extends VoiceActivity {
     // Color try
 
 
@@ -30,12 +32,29 @@ public class TargetSearch {
     private ImageView mImageDirection;
     private TextView mTextDirection;
     private Rect mTarget;
+    private Scalar mTargetColorRgba = new Scalar(0,0,0,0);
     private static final Scalar RED = new Scalar(255, 0, 0);
     private static final Scalar GREEN = new Scalar(0, 255, 0);
     private static final Scalar BLUE = new Scalar(0, 0, 255);
     private static final Scalar BLUE_BOX = new Scalar(0, 12, 127);
     private static final Scalar RED_NOTEBOOK = new Scalar(255, 48, 48);
-    private static final Scalar YELLOW_SUGAR = new Scalar(255,230,48);
+    private static final Scalar YELLOW_SUGAR = new Scalar(255, 230, 48);
+
+    public void setTargetColorToBlue() {
+        mTargetColorRgba = BLUE_BOX;
+    }
+
+    public void setTargetColorToRed() {
+        mTargetColorRgba = RED_NOTEBOOK;
+    }
+
+    public void setTargetColorToYellow() {
+        mTargetColorRgba = YELLOW_SUGAR;
+    }
+
+    public void setTargetColorToGreen() {
+        mTargetColorRgba = BLUE_BOX;//TODO add a green color
+    }
 
     //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
     private static final int AIM_DELTA = 50;
@@ -158,13 +177,13 @@ public class TargetSearch {
         Point frameCenter = new Point(incomingFrame.width() / 2, incomingFrame.height() / 2);
         int minDetectArea = 5000;
         Mat mRgba;
-        Scalar mTargetColorRgba;
+
         Scalar mTargetColorHsv;
         ColorBlobDetector mDetector = new ColorBlobDetector();
         Mat mSpectrum = new Mat();
         Size SPECTRUM_SIZE = new Size(200, 64);
         Scalar CONTOUR_COLOR = GREEN;
-        mTargetColorRgba = BLUE_BOX;
+        //mTargetColorRgba = BLUE_BOX;
         Scalar mColorRadius = new Scalar(10, 70, 70, 0);
         mTargetColorHsv = mDetector.converScalarRgba2Hsv(mTargetColorRgba);
         mDetector.setColorRadius(mColorRadius);
@@ -197,7 +216,7 @@ public class TargetSearch {
         mSpectrum.copyTo(spectrumLabel);
 
         if (directionsUpdater == null) {
-            directionsUpdater = new UpdateDirections(mTankActivity, frameCenter, mRgba.height(), mRgba.width(),nullTarget);
+            directionsUpdater = new UpdateDirections(mTankActivity, frameCenter, mRgba.height(), mRgba.width(), nullTarget);
         }
         directionsUpdater.setTarget(targetRect);
         mTankActivity.runOnUiThread(directionsUpdater);

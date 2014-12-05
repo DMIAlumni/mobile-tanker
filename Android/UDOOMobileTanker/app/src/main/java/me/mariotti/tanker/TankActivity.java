@@ -3,6 +3,7 @@ package me.mariotti.tanker;
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -11,6 +12,7 @@ import android.view.WindowManager;
 import android.widget.ScrollView;
 import me.mariotti.opencv.TargetSearch;
 import me.mariotti.tanker.messaging.Communicator;
+import me.mariotti.voice.VoiceActivity;
 import me.palazzetti.adktoolkit.AdkManager;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -27,8 +29,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 
-public class TankActivity extends Activity implements CvCameraViewListener {
-
+public class TankActivity extends VoiceActivity implements CvCameraViewListener {
+    private static final int VOICE_COLOR = 1;
     private final String TAG = "TankActivity";
     public static boolean DEBUG = false;
     private CameraBridgeViewBase mOpenCvCameraView;
@@ -37,6 +39,7 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     public AdkManager mArduino;
     private TargetSearch mTargetSearch;
     public TankLogic mTankLogic;
+    private boolean colorChoosen = false;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -89,6 +92,7 @@ public class TankActivity extends Activity implements CvCameraViewListener {
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.getHolder().setFixedSize(960, 540);
+        mTargetSearch = new TargetSearch(this);
     }
 
     @Override
@@ -133,10 +137,32 @@ public class TankActivity extends Activity implements CvCameraViewListener {
     public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
-        mTargetSearch = new TargetSearch(this);
+        mCommunicator.cancel(true);
+
+        if (!colorChoosen){listen(VOICE_COLOR);}
+        //mTargetSearch.setTargetColorToYellow();
         mArduino.open();
+
+//TODO fix communication
+           if (!mCommunicator.isCancelled()){ mCommunicator.execute();}
         mCommunicator.setKeepAlive(true);
-        mCommunicator.execute();
+    }
+
+    @Override
+    public void recognitionResults(int requestCode, String bestMatch) {
+        if (requestCode == VOICE_COLOR) {
+            if (bestMatch.contains("blu")) {
+                mTargetSearch.setTargetColorToBlue();
+            } else if (bestMatch.contains("rosso")) {
+                mTargetSearch.setTargetColorToRed();
+            } else if (bestMatch.contains("giallo")) {
+                mTargetSearch.setTargetColorToYellow();
+            } else if (bestMatch.contains("verde")) {
+                mTargetSearch.setTargetColorToGreen();
+            }else {listen(VOICE_COLOR);}
+        }
+        colorChoosen=true;
+        Log.w(TAG,bestMatch);
     }
 
     public void toggleDebug(View w) {
