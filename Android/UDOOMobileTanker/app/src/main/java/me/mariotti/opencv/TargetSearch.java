@@ -66,7 +66,6 @@ public class TargetSearch extends VoiceActivity {
         mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
         mImageDirection.setImageResource(R.drawable.ok);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
-        mTankLogic = mTankActivity.mTankLogic;
         nullTarget = new Rect(0, 0, 0, 0);
     }
 
@@ -85,7 +84,7 @@ public class TargetSearch extends VoiceActivity {
 
         // If there are more than one face select the bigger (should be the closest)
         Rect[] facesArray = faces.toArray();
-        mTarget = null;
+        mTarget = nullTarget;
         int targetArea = -1;
         for (Rect face : facesArray) {
             int faceArea = face.width * face.height;
@@ -111,49 +110,11 @@ public class TargetSearch extends VoiceActivity {
         Core.line(mIncomingFrame, new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
         Core.line(mIncomingFrame, new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
 
-        class updateDirections implements Runnable {
-            Rect mTarget;
-            Point frameCenter;
-
-            updateDirections(Rect mTarget, Point mFrameCenter) {
-                this.mTarget = mTarget;
-                this.frameCenter = mFrameCenter;
-            }
-
-            public void run() {
-                if (mTarget != null) {
-                    mTankLogic.frameWidth(mIncomingFrame.width());
-                    mTankLogic.frameHeight(mIncomingFrame.height());
-                    mTankLogic.targetWidth(mTarget.width);
-                    mTankLogic.targetHeight(mTarget.height);
-                    mTankLogic.targetCenter(new Point(mTarget.x + mTarget.width / 2, mTarget.y + mTarget.height / 2));
-                    mTextDirection.setVisibility(View.VISIBLE);
-                    mImageDirection.setVisibility(View.VISIBLE);
-
-                    if (frameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
-                        mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
-                        mTextDirection.setText("Turn Left");
-                        mTextDirection.append("" + mTarget.width);
-                        mImageDirection.setImageResource(R.drawable.right);
-                    } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
-                        mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
-                        mImageDirection.setImageResource(R.drawable.left);
-                        mTextDirection.setText("Turn Right");
-                        mTextDirection.append("" + mTarget.width);
-                    } else {
-                        mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
-                        mImageDirection.setImageResource(R.drawable.ok);
-                        mTextDirection.setText("STOP!");
-                        mTextDirection.append("" + mTarget.width);
-                    }
-                } else {
-                    mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
-                    mTextDirection.setVisibility(View.INVISIBLE);
-                    mImageDirection.setVisibility(View.INVISIBLE);
-                }
-            }
+        if (directionsUpdater == null) {
+            directionsUpdater = new UpdateDirections(mTankActivity, frameCenter, mIncomingFrame.height(), mIncomingFrame.width(), nullTarget);
         }
-        mTankActivity.runOnUiThread(new updateDirections(mTarget, frameCenter));
+        directionsUpdater.setTarget(mTarget);
+        mTankActivity.runOnUiThread(directionsUpdater);
         return mIncomingFrame;
     }
 

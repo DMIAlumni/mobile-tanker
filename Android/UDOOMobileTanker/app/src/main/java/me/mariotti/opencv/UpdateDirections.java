@@ -15,7 +15,7 @@ public class UpdateDirections implements Runnable {
     private final ImageView mImageDirection;
     private final TextView mTextDirection;
     Rect mTarget;
-    private final TankLogic mTankLogic;
+    private TankLogic mTankLogic;
     private final TankActivity mTankActivity;
     Point frameCenter;
     private final int frameHeight;
@@ -36,6 +36,9 @@ public class UpdateDirections implements Runnable {
 
     public void run() {
         if (mTarget != nullTarget) {
+            //if after a resume the tank logic instance has changed update it
+            mTankLogic=mTankLogic!=mTankActivity.mTankLogic?mTankActivity.mTankLogic:mTankLogic;
+
             mTankLogic.frameWidth(frameWidth);
             mTankLogic.frameHeight(frameHeight);
             mTankLogic.targetWidth(mTarget.width);

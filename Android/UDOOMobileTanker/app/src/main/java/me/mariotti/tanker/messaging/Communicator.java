@@ -27,6 +27,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
         this.mActivity = mActivity;
         mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
         mIncomingMessageObservable = new IncomingMessage();
+        execute();
     }
 
     @Override

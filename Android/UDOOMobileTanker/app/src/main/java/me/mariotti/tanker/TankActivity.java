@@ -1,9 +1,7 @@
 package me.mariotti.tanker;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -86,8 +84,8 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
         setContentView(R.layout.mobile_tank);
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
 
-        mCommunicator = new Communicator(this);
-        mTankLogic=new TankLogic(mCommunicator,this);
+//        mCommunicator = new Communicator(this);
+//        mTankLogic=new TankLogic(mCommunicator,this);
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
@@ -109,9 +107,9 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
         //flip horizontally and vertically due to camera physical position
-        Core.flip(aInputFrame,aInputFrame,-1);
-        //return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
-        //return mTargetSearch.searchContour(aInputFrame);
+        Core.flip(aInputFrame, aInputFrame, -1);
+//        return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
+//        return mTargetSearch.searchContour(aInputFrame);
         return mTargetSearch.searchColours(aInputFrame);
     }
 
@@ -119,7 +117,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
     protected void onPause() {
         super.onPause();
         mCommunicator.setKeepAlive(false);
-        mArduino.close();
+        //mArduino.close();
     }
 
     @Override
@@ -137,15 +135,22 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
     public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
-        mCommunicator.cancel(true);
+        restoreTargetAnalysisAndCommunication();
+        if (!colorChoosen) {
+            listen(VOICE_COLOR);
+        }
+    }
 
-        if (!colorChoosen){listen(VOICE_COLOR);}
-        //mTargetSearch.setTargetColorToYellow();
+    void restoreTargetAnalysisAndCommunication() {
         mArduino.open();
 
-//TODO fix communication
-           if (!mCommunicator.isCancelled()){ mCommunicator.execute();}
-        mCommunicator.setKeepAlive(true);
+        //let communicator's AsyncTask ends and clear the reference to it. !=null check is for avoid NullPointException on
+        //first run
+        if (mCommunicator != null) {
+            mCommunicator.setKeepAlive(false);
+        }
+        mCommunicator = new Communicator(this);
+        mTankLogic = new TankLogic(mCommunicator, this);
     }
 
     @Override
@@ -159,13 +164,15 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
                 mTargetSearch.setTargetColorToYellow();
             } else if (bestMatch.contains("verde")) {
                 mTargetSearch.setTargetColorToGreen();
-            }else {listen(VOICE_COLOR);}
+            } else {//try until we get a color
+                listen(VOICE_COLOR);
+            }
         }
-        colorChoosen=true;
-        Log.w(TAG,bestMatch);
+        colorChoosen = true;
+        Log.w(TAG, bestMatch);
     }
 
     public void toggleDebug(View w) {
-        DEBUG=!DEBUG;
+        DEBUG = !DEBUG;
     }
 }
