@@ -458,10 +458,14 @@ void emergency(){
     delay(1000);
   }
   else if (FLIsOut()){
+    moveBackward(140,140);
+    delay(200);
     turnRight(140, TURN_ON_SPOT);
     delay(500);
   }
   else if (FRIsOut()){
+    moveBackward(140,140);
+    delay(200);
     turnLeft(140, TURN_ON_SPOT);
     delay(500);
   }
