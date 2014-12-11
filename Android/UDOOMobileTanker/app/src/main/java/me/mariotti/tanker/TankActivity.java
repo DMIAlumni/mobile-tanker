@@ -8,6 +8,9 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
+import android.widget.Switch;
+import android.widget.TextView;
 import me.mariotti.opencv.TargetSearch;
 import me.mariotti.tanker.messaging.Communicator;
 import me.mariotti.voice.VoiceActivity;
@@ -38,6 +41,11 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
     private TargetSearch mTargetSearch;
     public TankLogic mTankLogic;
     private boolean colorChoosen = false;
+    private boolean colorSchema = false;
+    private Switch mColorSchemaSwitch;
+    SeekBar hue, saturation, value;
+    private TextView text_currentHue, text_currentSaturation, text_currentValue;
+    private SeekBar.OnSeekBarChangeListener seekBarListiner;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -82,6 +90,12 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.mobile_tank);
+        hue = (SeekBar) findViewById(R.id.seekBarHue);
+        saturation = (SeekBar) findViewById(R.id.seekBarSaturation);
+        value = (SeekBar) findViewById(R.id.seekBarValue);
+        text_currentHue = (TextView) findViewById(R.id.text_currentHue);
+        text_currentSaturation = (TextView) findViewById(R.id.text_currentSaturation);
+        text_currentValue = (TextView) findViewById(R.id.text_currentValue);
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
 
 //        mCommunicator = new Communicator(this);
@@ -90,7 +104,42 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.getHolder().setFixedSize(960, 540);
+        mColorSchemaSwitch = (Switch) findViewById(R.id.switch1);
         mTargetSearch = new TargetSearch(this);
+        seekBarListiner = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                progress = progress / 10;
+                if (seekBar == hue) {
+                    text_currentHue.setText(String.valueOf(progress));
+                }
+                if (seekBar == saturation) {
+                    text_currentSaturation.setText(String.valueOf(progress));
+                }
+                if (seekBar == value) {
+                    text_currentValue.setText(String.valueOf(progress));
+                }
+                if (colorSchema) {
+                    mTargetSearch.setTargetHSVColor(hue.getProgress() / 10, saturation.getProgress() / 10, value.getProgress() / 10);
+                } else {
+                    mTargetSearch.setTargetRGBColor(hue.getProgress() / 10, saturation.getProgress() / 10, value.getProgress() / 10);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        };
+
+        hue.setOnSeekBarChangeListener(seekBarListiner);
+        saturation.setOnSeekBarChangeListener(seekBarListiner);
+        value.setOnSeekBarChangeListener(seekBarListiner);
     }
 
     @Override
@@ -137,7 +186,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
         restoreTargetAnalysisAndCommunication();
         if (!colorChoosen) {
-            listen(VOICE_COLOR);
+            //listen(VOICE_COLOR); TODO Uncomment
         }
     }
 
@@ -175,4 +224,20 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
     public void toggleDebug(View w) {
         DEBUG = !DEBUG;
     }
+
+    public void switchColorSchema(View v) {
+        colorSchema = !colorSchema;
+        if (colorSchema) {
+            hue.setMax(3600);
+            saturation.setMax(1000);
+            value.setMax(1000);
+        } else {
+            hue.setMax(2550);
+            saturation.setMax(2550);
+            value.setMax(2550);
+        }
+
+
+    }
+
 }

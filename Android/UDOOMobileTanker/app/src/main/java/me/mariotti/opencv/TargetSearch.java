@@ -55,7 +55,13 @@ public class TargetSearch extends VoiceActivity {
     public void setTargetColorToGreen() {
         mTargetColorRgba = BLUE_BOX;//TODO add a green color
     }
+    public void setTargetRGBColor(int red, int green, int blue) {
 
+        mTargetColorRgba = new Scalar(red, green, blue);
+    }
+    public void setTargetHSVColor(int hue, int saturation, int value) {
+        mTargetColorRgba = ColorBlobDetector.converScalarHsv2Rgba(new Scalar(hue, saturation, value));
+    }
     //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
     private static final int AIM_DELTA = 50;
     UpdateDirections directionsUpdater = null;
@@ -196,5 +202,6 @@ public class TargetSearch extends VoiceActivity {
     public void setmGrayscaleImage(Mat mGrayscaleImage) {
         this.mGrayscaleImage = mGrayscaleImage;
     }
+
 
 }

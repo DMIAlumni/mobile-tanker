@@ -34,7 +34,7 @@ public class ColorBlobDetector {
         mColorRadius = radius;
     }
 
-    public Scalar converScalarHsv2Rgba(Scalar hsvColor) {
+    public static Scalar converScalarHsv2Rgba(Scalar hsvColor) {
         Mat pointMatRgba = new Mat();
         Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
         Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
