@@ -109,7 +109,7 @@ public class TankLogic implements Observer {
             }
         } else {// Target aimed
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140, 140));
+            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(120, 120));
             isMovingForward = true;
         }
         lastTargetCenter = targetCenter;

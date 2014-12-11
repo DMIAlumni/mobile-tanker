@@ -116,8 +116,9 @@ char outStringBuffer[BUFFSIZE];
 uint32_t bytesRead = 0;
 int blinkGreenTimer, blinkRedTimer;
 bool stateRed,stateGreen;
-bool emergency_mode,warning;
-int emergency_sensor_threshold =900;
+bool emergency_mode,warning,FL_edge,FR_edge;
+int emergency_sensor_threshold =900,currentState=IDLE;
+
 
 
 // Test Variabiles
@@ -165,19 +166,19 @@ void loop() {
   if (!sensorsOk() && warning){
     emergency_mode=true;    
     emergency();
-  }else if (!sensorsOk() && !warning){
-    warning=true;
-    Serial.println("Emergency warning");
-  } 
-  else {
-    warning=false;
-  }
-  if (COM_DEBUG_MODE) {
-    Serial.print(".");
-  }
+    }else if (!sensorsOk() && !warning){
+      warning=true;
+      Serial.println("Emergency warning");
+    } 
+    else {
+      warning=false;
+    }
+    if (COM_DEBUG_MODE) {
+      Serial.print(".");
+    }
 
 
-  Usb.Task();
+    Usb.Task();
   // Check that ADK is available
   if (adk.isReady()) {
     char*a;
@@ -188,16 +189,24 @@ void loop() {
         }
         switch (command) {
           case CMD_LEFT:
+          currentState=HUNTING;
           turnLeft(param1, param2);
           break;
           case CMD_RIGHT:
+          currentState=HUNTING;
           turnRight(param1, param2);
           break;
           case CMD_STOP:
+          currentState=IDLE;
           stop(HARD);
           break;
           case CMD_MOVE_FORWARD:
+          currentState=HUNTING;
           moveForward(param1,param2);
+          break;
+          case CMD_SEARCH:
+          currentState=SEARCHING;
+          moveForward(120,120);
           break;
           default:
           stop(HARD);
@@ -441,18 +450,41 @@ void emergency(){
   digitalWrite(LED_RED, HIGH);
   // rescue action
   stop(HARD);
-  moveBackward(170,140);
-  delay(1000);
+  if (FLIsOut() && FRIsOut()){
+    delay(200);
+    moveBackward(140,140);
+    delay(500);
+    turnRight(140,TURN_ON_SPOT);
+    delay(1000);
+  }
+  else if (FLIsOut()){
+    turnRight(140, TURN_ON_SPOT);
+    delay(500);
+  }
+  else if (FRIsOut()){
+    turnLeft(140, TURN_ON_SPOT);
+    delay(500);
+  }
+
+  
+  
   stop(SOFT);
     //TODO if is not all ok, call it recursively
     emergency_mode=warning=false;
   //
+  FL_edge=FR_edge=false;
   Serial.println("EMERGENCY ENDED");
   digitalWrite(LED_RED, LOW);
 }
 
-bool sensorsOk(){
-  return analogRead(FL)<emergency_sensor_threshold && analogRead(FR)<emergency_sensor_threshold;
+bool sensorsOk(){  
+  return !FLIsOut() && !FRIsOut();
+}
+bool FRIsOut(){
+  return analogRead(FR)>emergency_sensor_threshold;
+}
+bool FLIsOut(){
+  return analogRead(FL)>emergency_sensor_threshold;
 }
 
 void terminateAndroidApp(){
