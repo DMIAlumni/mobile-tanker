@@ -34,14 +34,14 @@ public class ColorBlobDetector {
         mColorRadius = radius;
     }
 
-    public static Scalar converScalarHsv2Rgba(Scalar hsvColor) {
+    public static Scalar convertScalarHsv2Rgba(Scalar hsvColor) {
         Mat pointMatRgba = new Mat();
         Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
         Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
         return new Scalar(pointMatRgba.get(0, 0));
     }
 
-    public Scalar converScalarRgba2Hsv(Scalar rgbaColor) {
+    public Scalar convertScalarRgba2Hsv(Scalar rgbaColor) {
         Mat pointMatHsv = new Mat();
         Mat pointMatRgba = new Mat(1, 1, CvType.CV_8UC3, rgbaColor);
         Imgproc.cvtColor(pointMatRgba, pointMatHsv, Imgproc.COLOR_RGB2HSV_FULL);

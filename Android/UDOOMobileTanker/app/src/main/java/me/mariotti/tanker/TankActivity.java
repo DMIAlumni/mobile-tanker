@@ -4,6 +4,7 @@ import android.content.Context;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
@@ -11,6 +12,7 @@ import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import me.mariotti.opencv.ColorBlobDetector;
 import me.mariotti.opencv.TargetSearch;
 import me.mariotti.tanker.messaging.Communicator;
 import me.mariotti.voice.VoiceActivity;
@@ -20,9 +22,8 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
@@ -30,7 +31,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 
-public class TankActivity extends VoiceActivity implements CvCameraViewListener {
+public class TankActivity extends VoiceActivity implements CvCameraViewListener,View.OnTouchListener {
     private static final int VOICE_COLOR = 1;
     private final String TAG = "TankActivity";
     public static boolean DEBUG = false;
@@ -44,6 +45,8 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
     private boolean colorSchema = false;
     private Switch mColorSchemaSwitch;
     SeekBar hue, saturation, value;
+    private Mat mInputFrame;
+
     private TextView text_currentHue, text_currentSaturation, text_currentValue;
     private SeekBar.OnSeekBarChangeListener seekBarListiner;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -52,6 +55,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                     initializeOpenCVDependencies();
+                    mOpenCvCameraView.setOnTouchListener(TankActivity.this);
                     break;
                 default:
                     super.onManagerConnected(status);
@@ -59,6 +63,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
             }
         }
     };
+
 
 
     private void initializeOpenCVDependencies() {
@@ -157,6 +162,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
     public Mat onCameraFrame(Mat aInputFrame) {
         //flip horizontally and vertically due to camera physical position
         Core.flip(aInputFrame, aInputFrame, -1);
+        mInputFrame= aInputFrame;
 //        return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
 //        return mTargetSearch.searchContour(aInputFrame);
         return mTargetSearch.searchColours(aInputFrame);
@@ -236,8 +242,57 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener 
             saturation.setMax(2550);
             value.setMax(2550);
         }
+    }
+
+    public boolean onTouch(View v, MotionEvent event) {
+        int cols = mInputFrame.cols();
+        int rows = mInputFrame.rows();
 
 
+        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
+        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+
+        int x = (int)event.getX() - xOffset;
+        int y = (int)event.getY() - yOffset;
+
+        Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
+
+        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+
+        Rect touchedRect = new Rect();
+
+        touchedRect.x = (x>4) ? x-4 : 0;
+        touchedRect.y = (y>4) ? y-4 : 0;
+
+        touchedRect.width = (x+4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
+        touchedRect.height = (y+4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
+
+        Mat touchedRegionRgba = mInputFrame.submat(touchedRect);
+
+        Mat touchedRegionHsv = new Mat();
+        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+
+        // Calculate average color of touched region
+        Scalar mBlobColorHsv = Core.sumElems(touchedRegionHsv);
+        int pointCount = touchedRect.width*touchedRect.height;
+        for (int i = 0; i < mBlobColorHsv.val.length; i++)
+            mBlobColorHsv.val[i] /= pointCount;
+
+        Scalar mBlobColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(mBlobColorHsv);
+
+        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
+                   ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
+
+        mTargetSearch.setTargetHSVColor(mBlobColorHsv);
+
+        //Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+
+        colorChoosen = true;
+
+        touchedRegionRgba.release();
+        touchedRegionHsv.release();
+
+        return false; // don't need subsequent touch events
     }
 
 }
