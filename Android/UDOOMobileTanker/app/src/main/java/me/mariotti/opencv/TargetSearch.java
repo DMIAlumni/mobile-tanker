@@ -18,10 +18,6 @@ import java.util.List;
 
 
 public class TargetSearch extends VoiceActivity {
-    // Color try
-
-
-    //
     private final String TAG = "TargetSearch";
     private TankActivity mTankActivity;
     private TankLogic mTankLogic;
@@ -32,6 +28,7 @@ public class TargetSearch extends VoiceActivity {
     private Rect mTarget;
     private ColorBlobDetector mDetector;
     private Scalar mTargetColorRgba = new Scalar(0,0,0,0);
+    private Scalar mTargetColorHsv = new Scalar(0,0,0,0);
     private static final Scalar RED = new Scalar(255, 0, 0);
     private static final Scalar GREEN = new Scalar(0, 255, 0);
     private static final Scalar BLUE = new Scalar(0, 0, 255);
@@ -60,9 +57,11 @@ public class TargetSearch extends VoiceActivity {
     }
     public void setTargetHSVColor(int hue, int saturation, int value) {
         mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(new Scalar(hue, saturation, value));
+        mTargetColorHsv=new Scalar(hue,saturation,value);
     }
     public void setTargetHSVColor(Scalar mHsvColor) {
         mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(mHsvColor);
+        mTargetColorHsv=mHsvColor;
     }
     //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
     private static final int AIM_DELTA = 50;
@@ -132,7 +131,7 @@ public class TargetSearch extends VoiceActivity {
         Imgproc.cvtColor(incomingFrame, mGrayscaleImage, Imgproc.COLOR_RGBA2GRAY);
 
         // Convert it in a binary image
-        Imgproc.threshold(mGrayscaleImage, binaryImage, /*Imgproc.THRESH_OTSU*/160f, 1, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(mGrayscaleImage, binaryImage, 160f, 1, Imgproc.THRESH_BINARY);
 
         ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 
@@ -147,14 +146,14 @@ public class TargetSearch extends VoiceActivity {
         int minDetectArea = 5000;
         Mat mRgba;
 
-        Scalar mTargetColorHsv;
+        //Scalar mTargetColorHsv;
         mDetector = new ColorBlobDetector();
         Mat mSpectrum = new Mat();
         Size SPECTRUM_SIZE = new Size(200, 64);
         Scalar CONTOUR_COLOR = GREEN;
         //mTargetColorRgba = BLUE_BOX;
-        Scalar mColorRadius = new Scalar(10, 70, 70, 0);
-        mTargetColorHsv = mDetector.convertScalarRgba2Hsv(mTargetColorRgba);
+        Scalar mColorRadius = new Scalar(20, 70, 70, 0);
+        //mTargetColorHsv = mDetector.convertScalarRgba2Hsv(mTargetColorRgba);
         mDetector.setColorRadius(mColorRadius);
         mDetector.setHsvColor(mTargetColorHsv);
 
@@ -166,6 +165,7 @@ public class TargetSearch extends VoiceActivity {
         Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
         LinkedList<Rect> rects = new LinkedList<Rect>();
         Rect targetRect = nullTarget;
+
         for (MatOfPoint contour : contours) {
             Rect tempRect = Imgproc.boundingRect(contour);
             if (rectArea(tempRect) >= minDetectArea) {
@@ -176,8 +176,10 @@ public class TargetSearch extends VoiceActivity {
                 }
             }
         }
+
         Core.rectangle(mRgba, targetRect.tl(), targetRect.br(), RED, 3);
 
+        //mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(new Scalar(360,255,255));
         Mat colorLabel = mRgba.submat(4, 68, 4, 68);
         colorLabel.setTo(mTargetColorRgba);
         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
@@ -205,9 +207,9 @@ public class TargetSearch extends VoiceActivity {
         this.mGrayscaleImage = mGrayscaleImage;
     }
 
-    public ColorBlobDetector getmDetector() {
-        return mDetector;
-    }
+//    public ColorBlobDetector getmDetector() {
+//        return mDetector;
+//    }
 
 
 }

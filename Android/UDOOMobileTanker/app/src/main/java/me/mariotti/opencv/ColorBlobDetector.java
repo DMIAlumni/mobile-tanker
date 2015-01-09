@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import android.util.Log;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -12,6 +13,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 public class ColorBlobDetector {
+    private static final String TAG = "ColorBlobDetector";
     // Lower and Upper bounds for range checking in HSV color space
     private Scalar mLowerBound = new Scalar(0);
     private Scalar mUpperBound = new Scalar(0);
@@ -21,7 +23,7 @@ public class ColorBlobDetector {
     private Scalar mColorRadius = new Scalar(25, 50, 50, 0);
 
     private Mat mSpectrum = new Mat();
-    private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
+    private List<MatOfPoint> mContours = new ArrayList<>();
 
     // Cache
     Mat mPyrDownMat = new Mat();
@@ -38,6 +40,10 @@ public class ColorBlobDetector {
         Mat pointMatRgba = new Mat();
         Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
         Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+        Log.i(TAG, "Source HSV color: (" + hsvColor.val[0] + ", " + hsvColor.val[1] +
+                  ", " + hsvColor.val[2] + ", " + hsvColor.val[3] + ")");
+        Log.i(TAG, "Converted RGBA color: (" + (new Scalar(pointMatRgba.get(0, 0))).val[0] +
+                   ", " + (new Scalar(pointMatRgba.get(0, 0))).val[1] + ", " + (new Scalar(pointMatRgba.get(0, 0))).val[2] + ", " + (new Scalar(pointMatRgba.get(0, 0))).val[3] + ")");
         return new Scalar(pointMatRgba.get(0, 0));
     }
 
@@ -50,7 +56,7 @@ public class ColorBlobDetector {
 
     public void setHsvColor(Scalar hsvColor) {
         double minH = (hsvColor.val[0] >= mColorRadius.val[0]) ? hsvColor.val[0] - mColorRadius.val[0] : 0;
-        double maxH = (hsvColor.val[0] + mColorRadius.val[0] <= 255) ? hsvColor.val[0] + mColorRadius.val[0] : 255;
+        double maxH = (hsvColor.val[0] + mColorRadius.val[0] <= 360) ? hsvColor.val[0] + mColorRadius.val[0] : 360;
 
         mLowerBound.val[0] = minH;
         mUpperBound.val[0] = maxH;
@@ -66,7 +72,7 @@ public class ColorBlobDetector {
         Mat spectrumHsv = new Mat(1, (int) (maxH - minH), CvType.CV_8UC3);
 
         for (int j = 0; j < maxH - minH; j++) {
-            byte[] tmp = {(byte) (minH + j), (byte) 255, (byte) 255};
+            byte[] tmp = {(byte) (minH + j), (byte) hsvColor.val[1], (byte) hsvColor.val[2]};
             spectrumHsv.put(0, j, tmp);
         }
 

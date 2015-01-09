@@ -24,22 +24,30 @@
         <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center_vertical|center_horizontal">
+                android:layout_height="wrap_content" android:layout_weight="1"
+                android:gravity="center_vertical|center_horizontal">
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent" android:layout_weight="1"
                     android:layout_gravity="center_vertical|left">
-                <SeekBar
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:id="@+id/seekBarHue" android:layout_weight="1"
-                        android:max="2550"/>
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="fill_parent"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:text="0"
+                        android:text="H"
+                        android:id="@+id/text_Hue_label" android:layout_gravity="left"
+                        android:gravity="center_vertical|center_horizontal"/>
+                <SeekBar
+                        android:layout_width="0dp"
+                        android:layout_height="fill_parent"
+                        android:id="@+id/seekBarHue" android:layout_weight="1"
+                        android:max="3600"/>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="0°"
                         android:id="@+id/text_currentHue" android:layout_gravity="right"
                         android:gravity="center_vertical|center_horizontal"/>
             </LinearLayout>
@@ -50,81 +58,89 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent" android:layout_weight="1"
                     android:layout_gravity="center_vertical|left">
-                <SeekBar
-                        android:layout_width="0dp"
-                        android:layout_height="fill_parent"
-                        android:id="@+id/seekBarSaturation" android:layout_weight="1" android:max="2550"/>
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="fill_parent"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:text="0"
-                        android:id="@+id/text_currentSaturation" android:layout_gravity="right"
+                        android:text="S"
+                        android:id="@+id/text_Saturation_label" android:layout_gravity="left"
                         android:gravity="center_vertical|center_horizontal"/>
+                <SeekBar
+                        android:layout_width="0dp"
+                        android:layout_height="fill_parent"
+                        android:id="@+id/seekBarSaturation" android:layout_weight="1" android:max="1000"/>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="0%"
+                        android:id="@+id/text_currentSaturation" android:layout_gravity="right"
+                        android:gravity="center_vertical|center_horizontal" android:singleLine="true"/>
             </LinearLayout>
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent" android:layout_weight="1"
                     android:layout_gravity="center_vertical|left">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="V"
+                        android:id="@+id/text_Value_label" android:layout_gravity="left"
+                        android:gravity="center_vertical|center_horizontal"/>
                 <SeekBar
                         android:layout_width="0dp"
                         android:layout_height="fill_parent"
-                        android:id="@+id/seekBarValue" android:layout_weight="1" android:max="2550"
+                        android:id="@+id/seekBarValue" android:layout_weight="1" android:max="1000"
                         />
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="fill_parent"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:text="0"
+                        android:text="0%"
                         android:id="@+id/text_currentValue" android:layout_gravity="right"
                         android:gravity="center_vertical|center_horizontal"/>
             </LinearLayout>
-            <Switch
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="New Switch"
-                    android:id="@+id/switch1" android:onClick="switchColorSchema" android:textOn="HSV"
-                    android:textOff="RGB"/>
         </LinearLayout>
     </LinearLayout>
     <LinearLayout
-                android:orientation="vertical"
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" android:gravity="center_vertical" android:layout_gravity="bottom"
+            android:baselineAligned="true" android:layout_weight="1">
+        <ImageView
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent" android:gravity="center_vertical" android:layout_gravity="bottom"
-                android:baselineAligned="true" android:layout_weight="1">
-            <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/DirectionsImageView" android:layout_gravity="center"
-                    android:contentDescription="Command" android:layout_weight="3"/>
+                android:layout_height="wrap_content"
+                android:id="@+id/DirectionsImageView" android:layout_gravity="center"
+                android:contentDescription="Command" android:layout_weight="3"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Large Text"
+                android:id="@+id/DirectionsTextView" android:layout_gravity="center" android:layout_weight="1"/>
+        <ScrollView
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:id="@+id/scrollView" android:layout_weight="3">
             <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceLarge"
-                    android:text="Large Text"
-                    android:id="@+id/DirectionsTextView" android:layout_gravity="center" android:layout_weight="1"/>
-            <ScrollView
-                    android:layout_width="fill_parent"
-                    android:layout_height="0dp"
-                    android:id="@+id/scrollView" android:layout_weight="3">
-                <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="LOG\n"
-                        android:id="@+id/LogTextView"
-                        android:layout_gravity="bottom"/>
+                    android:text="LOG\n"
+                    android:id="@+id/LogTextView"
+                    android:layout_gravity="bottom"/>
 
-            </ScrollView>
-            <ToggleButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DEBUG"
-                    android:id="@+id/debugButton" android:singleLine="true" android:onClick="toggleDebug"
-                    android:nestedScrollingEnabled="true" android:layout_gravity="center_horizontal|bottom"
-                    android:gravity="center_vertical|center_horizontal" android:layout_weight="1"/>
+        </ScrollView>
+        <ToggleButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEBUG"
+                android:id="@+id/debugButton" android:singleLine="true" android:onClick="toggleDebug"
+                android:nestedScrollingEnabled="true" android:layout_gravity="center_horizontal|bottom"
+                android:gravity="center_vertical|center_horizontal" android:layout_weight="1"/>
 
-        </LinearLayout>
+    </LinearLayout>
 
 
 </LinearLayout>
