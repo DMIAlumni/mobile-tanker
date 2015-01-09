@@ -71,7 +71,7 @@ public class TargetSearch extends VoiceActivity {
     public TargetSearch(TankActivity mTankActivity) {
         this.mTankActivity = mTankActivity;
         mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
-        mImageDirection.setImageResource(R.drawable.ok);
+        mImageDirection.setImageResource(R.drawable.tavolozza);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
         nullTarget = new Rect(0, 0, 0, 0);
     }

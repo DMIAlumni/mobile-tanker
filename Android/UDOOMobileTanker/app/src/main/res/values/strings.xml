@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">UDOO Mobile Tanker</string>
+    <string name="Chose_a_color">Pick a color on the camera stream</string>
 </resources>

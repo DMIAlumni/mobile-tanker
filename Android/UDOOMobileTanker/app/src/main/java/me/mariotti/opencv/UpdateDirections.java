@@ -22,7 +22,7 @@ public class UpdateDirections implements Runnable {
     private final int frameWidth;
     Rect nullTarget;
 
-    UpdateDirections(TankActivity mTankActivity, Point mFrameCenter,int frameHeight, int frameWidth, Rect nullTarget) {
+    UpdateDirections(TankActivity mTankActivity, Point mFrameCenter, int frameHeight, int frameWidth, Rect nullTarget) {
         this.mTankActivity = mTankActivity;
         this.frameCenter = mFrameCenter;
         this.frameHeight = frameHeight;
@@ -30,14 +30,14 @@ public class UpdateDirections implements Runnable {
         this.nullTarget = nullTarget;
         mTankLogic = mTankActivity.mTankLogic;
         mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
-        mImageDirection.setImageResource(R.drawable.ok);
+//        mImageDirection.setImageResource(R.drawable.found);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
     }
 
     public void run() {
         if (mTarget != nullTarget) {
             //if after a resume the tank logic instance has changed update it
-            mTankLogic=mTankLogic!=mTankActivity.mTankLogic?mTankActivity.mTankLogic:mTankLogic;
+            mTankLogic = mTankLogic != mTankActivity.mTankLogic ? mTankActivity.mTankLogic : mTankLogic;
 
             mTankLogic.frameWidth(frameWidth);
             mTankLogic.frameHeight(frameHeight);
@@ -50,18 +50,18 @@ public class UpdateDirections implements Runnable {
             if (frameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
                 mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
                 mTextDirection.setText("Turn Left");
-                mTextDirection.append("\nTarget Area = " + mTarget.width*mTarget.height);
+//                mTextDirection.append("\nTarget Area = " + mTarget.width * mTarget.height);
                 mImageDirection.setImageResource(R.drawable.right);
             } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
                 mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
                 mImageDirection.setImageResource(R.drawable.left);
                 mTextDirection.setText("Turn Right");
-                mTextDirection.append("\nTarget Area = " + mTarget.width*mTarget.height);
+//                mTextDirection.append("\nTarget Area = " + mTarget.width * mTarget.height);
             } else {
                 mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
-                mImageDirection.setImageResource(R.drawable.ok);
-                mTextDirection.setText("STOP!");
-                mTextDirection.append("\nTarget Area = " + mTarget.width*mTarget.height);
+                mImageDirection.setImageResource(R.drawable.found);
+                mTextDirection.setText("Target found!");
+//                mTextDirection.append("\nTarget Area = " + mTarget.width * mTarget.height);
             }
         } else {
             mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
@@ -69,6 +69,7 @@ public class UpdateDirections implements Runnable {
             mImageDirection.setVisibility(View.INVISIBLE);
         }
     }
+
     public void setTarget(Rect mTarget) {
         this.mTarget = mTarget;
     }
