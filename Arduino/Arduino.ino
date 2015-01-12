@@ -53,7 +53,8 @@
 const int
 LEFT = 0,
 RIGHT = 1,
-BOTH = 2;
+BOTH = 2,
+DEFAULT_VELOCITY=135;
 
 const bool
 FORWARD = HIGH,
@@ -106,7 +107,7 @@ USBHost Usb;
 ADK adk(&Usb, manufacturer, model, accessoryName, versionNumber, url, serialNumber);
 // End ADK configuration
 // Debug mode for communication
-bool COM_DEBUG_MODE = true;
+bool COM_DEBUG_MODE = false;
 // Debug mode for movment
 bool MOV_DEBUG_MODE = false;
 uint8_t inBuffer[BUFFSIZE];
@@ -117,7 +118,7 @@ uint32_t bytesRead = 0;
 int blinkGreenTimer, blinkRedTimer;
 bool stateRed,stateGreen;
 bool emergency_mode,warning,FL_edge,FR_edge;
-int emergency_sensor_threshold =900,currentState=IDLE;
+int emergency_sensor_threshold =880,currentState=IDLE;
 
 
 
@@ -152,6 +153,7 @@ void setup() {
 }
 
 void loop() {
+   Serial.print(analogRead(FR));Serial.print(" - ");Serial.println(analogRead(FL));
   if (digitalRead(TERMINATE_BUTTON)==HIGH){    
     terminateAndroidApp();
     stop(HARD);
@@ -206,7 +208,7 @@ void loop() {
           break;
           case CMD_SEARCH:
           currentState=SEARCHING;
-          moveForward(120,120);
+          moveForward(DEFAULT_VELOCITY,DEFAULT_VELOCITY);
           break;
           default:
           stop(HARD);
@@ -237,7 +239,6 @@ void loop() {
       Serial.print("*");
     }
     getDistance();
-    //sendToADK( random(0, 2), random(0, 4) + random(1, 3) * 100, random(150, 152));
   }
   delay(DELAY);
 }
@@ -274,6 +275,7 @@ void sendToADK(int command, int param1, int param2) {
   delay(DELAY / 10);
 }
 
+//TODO remove
 void sendToADKDelayed(int command, int param1, int param2) {
   int time = millis();
   if (time - last_send > 2000) {
@@ -452,30 +454,26 @@ void emergency(){
   stop(HARD);
   if (FLIsOut() && FRIsOut()){
     delay(200);
-    moveBackward(140,140);
+    moveBackward(DEFAULT_VELOCITY+15,DEFAULT_VELOCITY+15);
     delay(500);
-    turnRight(140,TURN_ON_SPOT);
+    turnRight(DEFAULT_VELOCITY+15,TURN_ON_SPOT);
     delay(1000);
   }
   else if (FLIsOut()){
-    moveBackward(140,140);
+    moveBackward(DEFAULT_VELOCITY+15,DEFAULT_VELOCITY+15);
     delay(200);
-    turnRight(140, TURN_ON_SPOT);
+    turnRight(DEFAULT_VELOCITY+15, TURN_ON_SPOT);
     delay(500);
   }
   else if (FRIsOut()){
-    moveBackward(140,140);
+    moveBackward(DEFAULT_VELOCITY+15,DEFAULT_VELOCITY+15);
     delay(200);
-    turnLeft(140, TURN_ON_SPOT);
+    turnLeft(DEFAULT_VELOCITY+15, TURN_ON_SPOT);
     delay(500);
   }
-
-  
-  
   stop(SOFT);
-    //TODO if is not all ok, call it recursively
-    emergency_mode=warning=false;
-  //
+  //TODO if is not all ok, call it recursively
+  emergency_mode=warning=false;
   FL_edge=FR_edge=false;
   Serial.println("EMERGENCY ENDED");
   digitalWrite(LED_RED, LOW);
@@ -494,66 +492,3 @@ bool FLIsOut(){
 void terminateAndroidApp(){
   sendToADK(INFO,TERMINATE,CMD_NULL_VALUE);  
 }
-
-void setSpeedAndGo(int velocityLeft, int velocityRight) {
-  releaseBrake(BOTH); 
-
-  if (millis()-coldTimerStart>100 ) {
-    if ( currentLeftVelocity<velocityLeft+10 && currentLeftVelocity!=LOW){
-      currentLeftVelocity= currentLeftVelocity+velocityStep/5;
-    }
-    if (currentRightVelocity<velocityRight){
-
-
-      currentRightVelocity= currentRightVelocity+velocityStep/5;
-
-    }
-    analogWrite(PWM_LEFT, currentLeftVelocity);
-    analogWrite(PWM_RIGHT, currentRightVelocity); 
-    Serial.println("");
-    Serial.print("Current velocity SX: ");Serial.println(currentLeftVelocity);
-    Serial.print("Current velocity DX: ");Serial.println(currentRightVelocity);
-    Serial.print(analogRead(SNS_LEFT));Serial.print("HHHH");Serial.println(analogRead(SNS_RIGHT));
-    coldTimerStart=millis();
-
-  }
-}
-
-
-void turnLeft2(int velocity){
-  if (lastCommand!=CMD_LEFT){
-    stop(HARD); 
-    coldTimerStart=millis(); 
-    currentLeftVelocity=LOW;
-    currentRightVelocity=baseVelocity;
-  }
-  setDirection(RIGHT, FORWARD);
-  setDirection(LEFT, BACKWARD);
-  setSpeedAndGo(LOW,velocity);
-}
-
-void turnRight2(int velocity){
-  if (lastCommand!=CMD_RIGHT){
-   stop(HARD); 
-   coldTimerStart=millis();
-   currentRightVelocity=LOW;
-   currentLeftVelocity=baseVelocity;
- }
- setDirection(RIGHT, BACKWARD);
- setDirection(LEFT, FORWARD);
- setSpeedAndGo(velocity,LOW);
-}
-
-// with method = HARD = true it uses brakes, otherwise stop by inertia 
-void stop2(bool method) {
-  if (method){ 
-    brake(BOTH);
-    currentRightVelocity=currentLeftVelocity=LOW;
-    analogWrite(PWM_LEFT, LOW);
-    analogWrite(PWM_RIGHT, LOW);
-    } else{
-      currentRightVelocity=currentLeftVelocity=LOW;
-      setSpeedAndGo(LOW,LOW);
-    }
-    delay(DELAY / 10);
-  }

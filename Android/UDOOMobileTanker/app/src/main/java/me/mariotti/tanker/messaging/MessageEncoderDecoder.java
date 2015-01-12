@@ -44,7 +44,7 @@ public class MessageEncoderDecoder {
     public final static int TERMINATE = 999;
 
     // Defaults
-    public final static int DEFAULT_VELOCITY = 115;
+    public final static int DEFAULT_VELOCITY = 135;
 
     // Android --> Arduino messages
 

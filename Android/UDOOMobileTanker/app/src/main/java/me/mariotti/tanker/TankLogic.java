@@ -13,6 +13,8 @@ public class TankLogic implements Observer {
     public final static int TARGET_POSITION_LEFT = 1;
     public final static int TARGET_POSITION_RIGHT = 2;
     public final static int TARGET_POSITION_NONE = 0;
+    public final static int LEFT = 0;
+    public final static int RIGHT = 0;
     private final String TAG = "TankLogic";
     private Communicator mCommunicator;
     private TankActivity mTankActivity;
@@ -31,6 +33,9 @@ public class TankLogic implements Observer {
     private int velocityStep = 1;
     private boolean isMovingForward;
     private int distance = Integer.MAX_VALUE;
+    private boolean isAvoidingObstacle=false;
+    private int aroundingDirection;
+    private int avoidingPhase=-1;
 
 
     public TankLogic(Communicator mCommunicator, TankActivity tankActivity) {
@@ -63,12 +68,43 @@ public class TankLogic implements Observer {
     }
 
     private void think() {
-        // Logic for target not in sight
-        if (distance != 0 && distance < 20) {
+        if (isAvoidingObstacle){
+            int timing=600;
+            switch (avoidingPhase){
+                case 1:
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
+
+
+            }
+        }
+        // Stop robot with an object within 5cm
+        if (distance != 0 && distance < 5) {
             mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
             isMovingForward = false;
             lastTargetCenter = null;
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+            return;
+        }
+        //Target Found
+        if (distance != 0 && distance < 30 && targetInSight) {
+            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+            isMovingForward = false;
+            lastTargetCenter = null;
+            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+            return;
+        }
+        //Obstacle on my way
+        if (distance != 0 && distance < 30 && !targetInSight) {
+            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+            isMovingForward = false;
+            lastTargetCenter = null;
+            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+            startAvoidingPhase();
             return;
         }
         if (!targetInSight) {
@@ -93,7 +129,7 @@ public class TankLogic implements Observer {
             //target not aimed
             if (targetDirection == TARGET_POSITION_LEFT) {
                 if (isMovingForward) {
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(140, 200));
+                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY+20));
                 } else {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
                     isMovingForward = false;
@@ -101,7 +137,7 @@ public class TankLogic implements Observer {
             }
             if (targetDirection == TARGET_POSITION_RIGHT) {
                 if (isMovingForward) {
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(200, 140));
+                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY+20, MessageEncoderDecoder.DEFAULT_VELOCITY));
                 } else {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
                     isMovingForward = false;
@@ -109,10 +145,16 @@ public class TankLogic implements Observer {
             }
         } else {// Target aimed
             turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(120, 120));
+            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY));
             isMovingForward = true;
         }
         lastTargetCenter = targetCenter;
+    }
+
+    private void startAvoidingPhase() {
+        isAvoidingObstacle=true;
+        aroundingDirection=Math.random()>=0.5?LEFT:RIGHT;
+        avoidingPhase=1;
     }
 
     private boolean isNotTurning() {
