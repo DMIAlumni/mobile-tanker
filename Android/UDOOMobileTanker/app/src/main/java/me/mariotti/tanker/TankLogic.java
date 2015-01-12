@@ -1,5 +1,6 @@
 package me.mariotti.tanker;
 
+import android.util.Log;
 import me.mariotti.tanker.messaging.Communicator;
 import me.mariotti.tanker.messaging.DecodedMessage;
 import me.mariotti.tanker.messaging.MessageEncoderDecoder;
@@ -33,9 +34,10 @@ public class TankLogic implements Observer {
     private int velocityStep = 1;
     private boolean isMovingForward;
     private int distance = Integer.MAX_VALUE;
-    private boolean isAvoidingObstacle=false;
+    private boolean isAroundingObstacle = false;
     private int aroundingDirection;
-    private int avoidingPhase=-1;
+    private int aroundingPhase = -1;
+    private long phaseTime = -1;
 
 
     public TankLogic(Communicator mCommunicator, TankActivity tankActivity) {
@@ -68,93 +70,143 @@ public class TankLogic implements Observer {
     }
 
     private void think() {
-        if (isAvoidingObstacle){
-            int timing=600;
-            switch (avoidingPhase){
+        // Stop robot with an object within 5cm
+        if (distance != 0 && distance < 5) {
+            Log.i(TAG, "Object at " + distance + "cm. Stopped.");
+            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+            isMovingForward = false;
+            lastTargetCenter = null;
+            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+            return;
+        }
+
+        if (isAroundingObstacle) {
+            //While arounding the obstacle he see the target
+            if (targetInSight) {
+                Log.i(TAG, "Target seen while arounding the obstacle");
+                mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+                resetObstacle();
+                return;
+            }
+            //Obstacle on my way
+            if (distance != 0 && distance < 30 && !targetInSight) {
+                Log.i(TAG, "Another obstacle at " + distance + "cm. Starting arounding process.");
+                resetObstacle();
+                startAvoidingPhase(false);
+                return;
+            }
+            Log.i(TAG, "Phase: " + aroundingPhase);
+            int timing = 1000;
+            switch (aroundingPhase) {
                 case 1:
+                    if (phaseTime == -1) {
+                        phaseTime = System.currentTimeMillis();
+                    }
+                    if (aroundingDirection == LEFT) {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                    } else {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                    }
+                    checkPhaseTimeElapsed(timing);
+
                     break;
                 case 2:
+                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY));
+                    checkPhaseTimeElapsed(timing/2);
                     break;
                 case 3:
+                    if (aroundingDirection == LEFT) {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                    } else {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                    }
+                    checkPhaseTimeElapsed(timing);
                     break;
                 case 4:
 
 
             }
-        }
-        // Stop robot with an object within 5cm
-        if (distance != 0 && distance < 5) {
-            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-            isMovingForward = false;
-            lastTargetCenter = null;
-            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            return;
-        }
-        //Target Found
-        if (distance != 0 && distance < 30 && targetInSight) {
-            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-            isMovingForward = false;
-            lastTargetCenter = null;
-            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            return;
-        }
-        //Obstacle on my way
-        if (distance != 0 && distance < 30 && !targetInSight) {
-            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-            isMovingForward = false;
-            lastTargetCenter = null;
-            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            startAvoidingPhase();
-            return;
-        }
-        if (!targetInSight) {
-            mCommunicator.setOutgoing(MessageEncoderDecoder.search());
-            isMovingForward = false;
-            lastTargetCenter = null;
-            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            return;
-        }
-        //if target is thinner than 100px consider it 100px width
-        targetWidth = targetWidth < 100 ? 100 : targetWidth;
-        // Target in sight
-        if (targetCenter.x < frameWidth / 2 - targetWidth / 2 || targetCenter.x > frameWidth / 2 + targetWidth / 2) {
-            //TODO add a minimum width of target
-            //power up velocity if since last frame we didn't move, and wen we start moving maintain it since aim OK
-            if (isNotTurning()) {
-                turnVelocity += velocityStep;
-                if (turnVelocity > 255 - velocityStep)
-                    turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-                //TODO send rover in emergency mode cause it's stuck
+
+        } else {
+            //Target Found
+            if (distance != 0 && distance < 30 && targetInSight) {
+                Log.i(TAG, "Target at " + distance + "cm. FOUND.");
+                mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+                isMovingForward = false;
+                lastTargetCenter = null;
+                turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                return;
             }
-            //target not aimed
-            if (targetDirection == TARGET_POSITION_LEFT) {
-                if (isMovingForward) {
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY+20));
-                } else {
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
-                    isMovingForward = false;
+            //Obstacle on my way
+            if (distance != 0 && distance < 30 && !targetInSight) {
+                Log.i(TAG, "Obstacle at " + distance + "cm. Starting arounding orocess.");
+                mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+                isMovingForward = false;
+                lastTargetCenter = null;
+                turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                startAvoidingPhase(true);
+                return;
+            }
+            if (!targetInSight) {
+                Log.i(TAG, "None Object at in sight. Searching.");
+                mCommunicator.setOutgoing(MessageEncoderDecoder.search());
+                isMovingForward = false;
+                lastTargetCenter = null;
+                turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                return;
+            }
+            //if target is thinner than 100px consider it 100px width
+            targetWidth = targetWidth < 100 ? 100 : targetWidth;
+            // Target in sight
+            if (targetCenter.x < frameWidth / 2 - targetWidth / 2 || targetCenter.x > frameWidth / 2 + targetWidth / 2) {
+                Log.i(TAG, "Target insight");
+                //TODO add a minimum width of target
+                //power up velocity if since last frame we didn't move, and wen we start moving maintain it since aim OK
+                if (isNotTurning()) {
+                    turnVelocity += velocityStep;
+                    if (turnVelocity > 255 - velocityStep)
+                        turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                    //TODO send rover in emergency mode cause it's stuck
                 }
-            }
-            if (targetDirection == TARGET_POSITION_RIGHT) {
-                if (isMovingForward) {
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY+20, MessageEncoderDecoder.DEFAULT_VELOCITY));
-                } else {
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
-                    isMovingForward = false;
+                //target not aimed
+                if (targetDirection == TARGET_POSITION_LEFT) {
+                    if (isMovingForward) {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY + 20));
+                    } else {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
+                        isMovingForward = false;
+                    }
                 }
+                if (targetDirection == TARGET_POSITION_RIGHT) {
+                    if (isMovingForward) {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.DEFAULT_VELOCITY));
+                    } else {
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(turnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
+                        isMovingForward = false;
+                    }
+                }
+            } else {// Target aimed
+                turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY));
+                isMovingForward = true;
             }
-        } else {// Target aimed
-            turnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY));
-            isMovingForward = true;
+            lastTargetCenter = targetCenter;
         }
-        lastTargetCenter = targetCenter;
     }
 
-    private void startAvoidingPhase() {
-        isAvoidingObstacle=true;
-        aroundingDirection=Math.random()>=0.5?LEFT:RIGHT;
-        avoidingPhase=1;
+    private void resetObstacle() {
+        isAroundingObstacle = false;
+        aroundingPhase = -1;
+        phaseTime = -1;
+    }
+
+    private void startAvoidingPhase(boolean newDirection) {
+        mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+        isAroundingObstacle = true;
+        aroundingPhase = 1;
+        if (newDirection) {
+            aroundingDirection = Math.random() >= 0.5 ? LEFT : RIGHT;
+        }
     }
 
     private boolean isNotTurning() {
@@ -167,7 +219,7 @@ public class TankLogic implements Observer {
             if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()) {
                 distance = incomingMessage.getData();
             }
-            if (incomingMessage.isTerminateCommand()){
+            if (incomingMessage.isTerminateCommand()) {
                 mTankActivity.finish();
 
             }
@@ -183,5 +235,17 @@ public class TankLogic implements Observer {
 
     public void frameHeight(int height) {
         frameHeight = height;
+    }
+
+    void checkPhaseTimeElapsed(long thresholdPhaseTime) {
+        if (System.currentTimeMillis() - phaseTime > thresholdPhaseTime) {
+            aroundingPhase++;
+            phaseTime = System.currentTimeMillis();
+            if (aroundingPhase > 3) {
+                isAroundingObstacle = false;
+                aroundingPhase = -1;
+                phaseTime = -1;
+            }
+        }
     }
 }
