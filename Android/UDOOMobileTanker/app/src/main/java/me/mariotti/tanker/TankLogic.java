@@ -38,6 +38,7 @@ public class TankLogic implements Observer {
     private int aroundingDirection;
     private int aroundingPhase = -1;
     private long phaseTime = -1;
+    private int phaseLength = 1000;
 
 
     public TankLogic(Communicator mCommunicator, TankActivity tankActivity) {
@@ -72,6 +73,7 @@ public class TankLogic implements Observer {
     private void think() {
         // Stop robot with an object within 5cm
         if (distance != 0 && distance < 5) {
+            deleteObstacle();
             Log.i(TAG, "Object at " + distance + "cm. Stopped.");
             mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
             isMovingForward = false;
@@ -85,42 +87,42 @@ public class TankLogic implements Observer {
             if (targetInSight) {
                 Log.i(TAG, "Target seen while arounding the obstacle");
                 mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-                resetObstacle();
+                deleteObstacle();
                 return;
             }
             //Obstacle on my way
-            if (distance != 0 && distance < 30 && !targetInSight) {
+           /* if (distance != 0 && distance < 30 && !targetInSight) {
                 Log.i(TAG, "Another obstacle at " + distance + "cm. Starting arounding process.");
                 resetObstacle();
-                startAvoidingPhase(false);
-                return;
+
             }
+           */
             Log.i(TAG, "Phase: " + aroundingPhase);
-            int timing = 1000;
+
             switch (aroundingPhase) {
                 case 1:
                     if (phaseTime == -1) {
                         phaseTime = System.currentTimeMillis();
                     }
                     if (aroundingDirection == LEFT) {
-                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 30, MessageEncoderDecoder.TURN_ON_SPOT));
                     } else {
-                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 25, MessageEncoderDecoder.TURN_ON_SPOT));
                     }
-                    checkPhaseTimeElapsed(timing);
+                    checkPhaseTimeElapsed(phaseLength);
 
                     break;
                 case 2:
                     mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY));
-                    checkPhaseTimeElapsed(timing/2);
+                    checkPhaseTimeElapsed((int) (phaseLength / 1));
                     break;
                 case 3:
                     if (aroundingDirection == LEFT) {
-                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 25, MessageEncoderDecoder.TURN_ON_SPOT));
                     } else {
-                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.TURN_NORMALLY));
+                        mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 30, MessageEncoderDecoder.TURN_ON_SPOT));
                     }
-                    checkPhaseTimeElapsed(timing);
+                    checkPhaseTimeElapsed(phaseLength);
                     break;
                 case 4:
 
@@ -194,10 +196,17 @@ public class TankLogic implements Observer {
         }
     }
 
-    private void resetObstacle() {
+    private void deleteObstacle() {
+        phaseTime = aroundingPhase = -1;
         isAroundingObstacle = false;
-        aroundingPhase = -1;
-        phaseTime = -1;
+    }
+
+    private void resetObstacle() {
+        if (aroundingPhase == 2) {
+//            phaseTime += phaseLength / 1.2;
+        } else {
+            phaseTime += phaseLength;
+        }
     }
 
     private void startAvoidingPhase(boolean newDirection) {
@@ -239,12 +248,17 @@ public class TankLogic implements Observer {
 
     void checkPhaseTimeElapsed(long thresholdPhaseTime) {
         if (System.currentTimeMillis() - phaseTime > thresholdPhaseTime) {
-            aroundingPhase++;
-            phaseTime = System.currentTimeMillis();
-            if (aroundingPhase > 3) {
-                isAroundingObstacle = false;
-                aroundingPhase = -1;
-                phaseTime = -1;
+            //se c'è ancora un ostacolo a meno di 30 centimetri
+            if (distance != 0 && distance < 30 && aroundingPhase != 2) {
+                phaseTime += phaseLength / 5;
+            } else {
+                aroundingPhase++;
+                phaseTime = System.currentTimeMillis();
+                if (aroundingPhase > 3) {
+                    isAroundingObstacle = false;
+                    aroundingPhase = -1;
+                    phaseTime = -1;
+                }
             }
         }
     }
