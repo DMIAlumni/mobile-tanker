@@ -153,13 +153,13 @@ void setup() {
 }
 
 void loop() {
-   Serial.print(analogRead(FR));Serial.print(" - ");Serial.println(analogRead(FL));
-  if (digitalRead(TERMINATE_BUTTON)==HIGH){    
-    terminateAndroidApp();
-    stop(HARD);
-    Serial.println("Android App Closed. Push reset button to restart all.");
-    while(1);
-  }
+ Serial.print(analogRead(FR));Serial.print(" - ");Serial.println(analogRead(FL));
+ if (digitalRead(TERMINATE_BUTTON)==HIGH){    
+  terminateAndroidApp();
+  stop(HARD);
+  Serial.println("Android App Closed. Push reset button to restart all.");
+  while(1);
+}
   //Go in emergency mode after two bad readings from sensor
   if (MOV_DEBUG_MODE){
     Serial.print("FL reading: ");
@@ -468,7 +468,7 @@ void emergency(){
   else if (FRIsOut()){
     moveBackward(DEFAULT_VELOCITY+15,DEFAULT_VELOCITY+15);
     delay(200);
-    turnLeft(DEFAULT_VELOCITY+15, TURN_ON_SPOT);
+    turnLeft(DEFAULT_VELOCITY+25, TURN_ON_SPOT);
     delay(500);
   }
   stop(SOFT);
