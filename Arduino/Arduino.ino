@@ -5,7 +5,6 @@
 #define LED_GREEN 53
 #define LED_YELLOW 52
 #define LED_RED 7
-#define TERMINATE_BUTTON 51
 #define BUFFSIZE   255
 #define MAX_POWER  400
 #define DELAY 50 // Smaller delay breaks everything about communication
@@ -137,9 +136,7 @@ void setup() {
   pinMode(LED_YELLOW, OUTPUT);
   pinMode(LED_RED, OUTPUT);
   pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
-  pinMode(TERMINATE_BUTTON, INPUT);
-  //pinMode(FL, INPUT);
+  pinMode(ECHO_PIN, INPUT);  
   Serial.begin(115200);
   delay(1000);
   Serial.println("All power to the engines!");
@@ -154,12 +151,6 @@ void setup() {
 
 void loop() {
  Serial.print(analogRead(FR));Serial.print(" - ");Serial.println(analogRead(FL));
- if (digitalRead(TERMINATE_BUTTON)==HIGH){    
-  terminateAndroidApp();
-  stop(HARD);
-  Serial.println("Android App Closed. Push reset button to restart all.");
-  while(1);
-}
   //Go in emergency mode after two bad readings from sensor
   if (MOV_DEBUG_MODE){
     Serial.print("FL reading: ");
