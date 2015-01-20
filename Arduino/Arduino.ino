@@ -117,7 +117,7 @@ uint32_t bytesRead = 0;
 int blinkGreenTimer, blinkYellowTimer;
 bool stateYellow,stateGreen;
 bool emergency_mode,warning,FL_edge,FR_edge;
-int emergency_sensor_threshold =880,currentState=IDLE;
+int emergency_sensor_threshold =850,currentState=IDLE;
 
 
 
@@ -150,7 +150,7 @@ void setup() {
 }
 
 void loop() {
- Serial.print(analogRead(FR));Serial.print(" - ");Serial.println(analogRead(FL));
+ Serial.print(analogRead(FL));Serial.print(" Left - Right ");Serial.println(analogRead(FR));
   //Go in emergency mode after two bad readings from sensor
   if (MOV_DEBUG_MODE){
     Serial.print("FL reading: ");
