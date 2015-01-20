@@ -1,6 +1,7 @@
 package me.mariotti.tanker;
 
 import android.util.Log;
+import me.mariotti.opencv.UpdateDirections;
 import me.mariotti.tanker.messaging.Communicator;
 import me.mariotti.tanker.messaging.DecodedMessage;
 import me.mariotti.tanker.messaging.MessageEncoderDecoder;
@@ -81,8 +82,10 @@ public class TankLogic implements Observer {
                 if (startCheerTime == -1) {
                     startCheerTime = System.currentTimeMillis();
                     Log.i(TAG, "Target at " + distance + "cm. CHEER.");
+                    UpdateDirections.getInstance(mTankActivity).found();
                 }
                 mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 50, MessageEncoderDecoder.TURN_ON_SPOT));
+                long a = System.currentTimeMillis();
                 if (startCheerTime + cheerLenght < System.currentTimeMillis()) {
                     cheer = false;
                     targetFound = false;
@@ -90,6 +93,7 @@ public class TankLogic implements Observer {
                     mTankActivity.reset();
                     Log.i(TAG, "Stop searching. Choose a new color to find");
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+                    UpdateDirections.getInstance(mTankActivity).chooseColor();
                 }
                 return;
             }

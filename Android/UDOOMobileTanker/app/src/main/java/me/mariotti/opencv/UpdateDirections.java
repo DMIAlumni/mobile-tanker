@@ -11,66 +11,95 @@ import org.opencv.core.Rect;
 
 public class UpdateDirections implements Runnable {
 
+    private ImageView mImageDirection;
+    private TextView mTextDirection = null;
+    private int image;
+    private String text;
+    private int isVisible = View.INVISIBLE;
+    private TankActivity mTankActivity;
+    private static UpdateDirections instance;
+    private boolean enabled = true;
 
-    private final ImageView mImageDirection;
-    private final TextView mTextDirection;
-    Rect mTarget;
-    private TankLogic mTankLogic;
-    private final TankActivity mTankActivity;
-    Point frameCenter;
-    private final int frameHeight;
-    private final int frameWidth;
-    Rect nullTarget;
-
-    UpdateDirections(TankActivity mTankActivity, Point mFrameCenter, int frameHeight, int frameWidth, Rect nullTarget) {
+    private UpdateDirections(TankActivity mTankActivity) {
         this.mTankActivity = mTankActivity;
-        this.frameCenter = mFrameCenter;
-        this.frameHeight = frameHeight;
-        this.frameWidth = frameWidth;
-        this.nullTarget = nullTarget;
-        mTankLogic = mTankActivity.mTankLogic;
         mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
-//        mImageDirection.setImageResource(R.drawable.found);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
+        instance = this;
+    }
+
+    UpdateDirections() {
+    }
+
+    static public UpdateDirections getInstance(TankActivity mTankActivity) {
+        if (instance == null) {
+            instance = new UpdateDirections(mTankActivity);
+        }
+        return instance;
     }
 
     public void run() {
-        if (mTarget != nullTarget) {
-            //if after a resume the tank logic instance has changed update it
-            mTankLogic = mTankLogic != mTankActivity.mTankLogic ? mTankActivity.mTankLogic : mTankLogic;
-
-            mTankLogic.frameWidth(frameWidth);
-            mTankLogic.frameHeight(frameHeight);
-            mTankLogic.targetWidth(mTarget.width);
-            mTankLogic.targetHeight(mTarget.height);
-            mTankLogic.targetCenter(new Point(mTarget.x + mTarget.width / 2, mTarget.y + mTarget.height / 2));
-            mTextDirection.setVisibility(View.VISIBLE);
-            mImageDirection.setVisibility(View.VISIBLE);
-
-            if (frameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
-                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
-                mTextDirection.setText("Turn Left");
-//                mTextDirection.append("\nTarget Area = " + mTarget.width * mTarget.height);
-                mImageDirection.setImageResource(R.drawable.right);
-            } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
-                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
-                mImageDirection.setImageResource(R.drawable.left);
-                mTextDirection.setText("Turn Right");
-//                mTextDirection.append("\nTarget Area = " + mTarget.width * mTarget.height);
-            } else {
-                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
-                mImageDirection.setImageResource(R.drawable.found);
-                mTextDirection.setText("Target found!");
-//                mTextDirection.append("\nTarget Area = " + mTarget.width * mTarget.height);
-            }
-        } else {
-            mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
-            mTextDirection.setVisibility(View.INVISIBLE);
-            mImageDirection.setVisibility(View.INVISIBLE);
+        mTextDirection.setVisibility(isVisible);
+        mImageDirection.setVisibility(isVisible);
+        mTextDirection.setText(text);
+        mImageDirection.setImageResource(image);
+        if (!enabled && image == R.drawable.tavolozza) {
+            enabled = true;
         }
     }
 
-    public void setTarget(Rect mTarget) {
-        this.mTarget = mTarget;
+    public void left() {
+        if (enabled) {
+            text = "Turn Left";
+            image = R.drawable.left;
+            mTankActivity.runOnUiThread(this);
+        }
+    }
+
+    public void right() {
+        if (enabled) {
+            text = "Turn Right";
+            image = R.drawable.right;
+            mTankActivity.runOnUiThread(this);
+        }
+    }
+
+    public void aimed() {
+        if (enabled) {
+            text = "Target in sight, aimed!";
+            image = R.drawable.aimed;
+            mTankActivity.runOnUiThread(this);
+        }
+    }
+
+    public void search() {
+        if (enabled) {
+            text = "Searching...";
+            image = R.drawable.up;
+            mTankActivity.runOnUiThread(this);
+        }
+    }
+
+    public void found() {
+        enabled = false;
+        text = "Color Found!";
+        image = R.drawable.found;
+        mTankActivity.runOnUiThread(this);
+    }
+
+    public void show() {
+        isVisible = View.VISIBLE;
+        mTankActivity.runOnUiThread(this);
+    }
+
+    public void hide() {
+        isVisible = View.INVISIBLE;
+        mTankActivity.runOnUiThread(this);
+    }
+
+    public void chooseColor() {
+        text = "Pick a color on the camera stream";
+        image = R.drawable.tavolozza;
+        mTankActivity.runOnUiThread(this);
+
     }
 }

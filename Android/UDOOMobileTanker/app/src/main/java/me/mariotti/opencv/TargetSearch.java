@@ -35,6 +35,14 @@ public class TargetSearch extends VoiceActivity {
     private static final Scalar BLUE_BOX = new Scalar(0, 12, 127);
     private static final Scalar RED_NOTEBOOK = new Scalar(255, 48, 48);
     private static final Scalar YELLOW_SUGAR = new Scalar(255, 230, 48);
+    //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
+    private static final int AIM_DELTA = 50;
+    private UpdateDirections directionsUpdater = null;
+    Rect nullTarget;
+
+    public UpdateDirections getDirectionsUpdater() {
+        return directionsUpdater;
+    }
 
     public void setTargetColorToBlue() {
         mTargetColorRgba = BLUE_BOX;
@@ -63,13 +71,11 @@ public class TargetSearch extends VoiceActivity {
         mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(mHsvColor);
         mTargetColorHsv=mHsvColor;
     }
-    //Target is correctly aimed if x-pos of mTarget center is ± AIM_DELTA from x-poss center of frame center
-    private static final int AIM_DELTA = 50;
-    UpdateDirections directionsUpdater = null;
-    Rect nullTarget;
+
 
     public TargetSearch(TankActivity mTankActivity) {
         this.mTankActivity = mTankActivity;
+        mTankLogic = mTankActivity.mTankLogic;
         mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
         mImageDirection.setImageResource(R.drawable.tavolozza);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
@@ -117,10 +123,10 @@ public class TargetSearch extends VoiceActivity {
         Core.line(mIncomingFrame, new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
         Core.line(mIncomingFrame, new Point(frameCenter.x + centerCrossSize / 2, frameCenter.y - centerCrossSize / 2), new Point(frameCenter.x - centerCrossSize / 2, frameCenter.y + centerCrossSize / 2), BLUE, 2);
 
-        if (directionsUpdater == null) {
-            directionsUpdater = new UpdateDirections(mTankActivity, frameCenter, mIncomingFrame.height(), mIncomingFrame.width(), nullTarget);
-        }
-        directionsUpdater.setTarget(mTarget);
+
+            directionsUpdater =UpdateDirections.getInstance(mTankActivity);
+
+        //directionsUpdater.setTarget(mTarget);
         mTankActivity.runOnUiThread(directionsUpdater);
         return mIncomingFrame;
     }
@@ -176,7 +182,7 @@ public class TargetSearch extends VoiceActivity {
                 }
             }
         }
-
+        mTarget=targetRect;
         Core.rectangle(mRgba, targetRect.tl(), targetRect.br(), RED, 3);
 
         //mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(new Scalar(360,255,255));
@@ -186,11 +192,40 @@ public class TargetSearch extends VoiceActivity {
         Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 38, 38 + mSpectrum.cols());
         mSpectrum.copyTo(spectrumLabel);
 
-        if (directionsUpdater == null) {
-            directionsUpdater = new UpdateDirections(mTankActivity, frameCenter, mRgba.height(), mRgba.width(), nullTarget);
+
+            directionsUpdater = UpdateDirections.getInstance(mTankActivity);
+
+        if (mTarget != nullTarget) {
+            directionsUpdater.show();
+            //if after a resume the tank logic instance has changed update it
+            mTankLogic = mTankLogic != mTankActivity.mTankLogic ? mTankActivity.mTankLogic : mTankLogic;
+
+            mTankLogic.frameWidth(mRgba.width());
+            mTankLogic.frameHeight(mRgba.height());
+            mTankLogic.targetWidth(mTarget.width);
+            mTankLogic.targetHeight(mTarget.height);
+            mTankLogic.targetCenter(new Point(mTarget.x + mTarget.width / 2, mTarget.y + mTarget.height / 2));
+
+
+            if (frameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
+                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
+                directionsUpdater.left();
+
+            } else if (frameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
+                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
+                directionsUpdater.right();
+            } else {
+                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
+               directionsUpdater.aimed();
+            }
+        } else {
+            mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
+            directionsUpdater.show();
+            directionsUpdater.search();
         }
-        directionsUpdater.setTarget(targetRect);
-        mTankActivity.runOnUiThread(directionsUpdater);
+
+        //directionsUpdater.setTarget(targetRect);
+        //mTankActivity.runOnUiThread(directionsUpdater);
 
         return mRgba;
     }

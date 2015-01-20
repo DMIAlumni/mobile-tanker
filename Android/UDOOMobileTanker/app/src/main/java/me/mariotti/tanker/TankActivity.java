@@ -195,7 +195,13 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
     public void reset(){
         isColorChosen=false;
         go = false;
-        buttonGo.setChecked(false);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                buttonGo.setChecked(false);
+            }
+        });
+
     }
 
     void restoreTargetAnalysisAndCommunication() {
