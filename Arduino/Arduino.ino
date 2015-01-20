@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 #include <adk.h>
-#define LED_GREEN 53
-#define LED_YELLOW 52
-#define LED_RED 7
+#define LED_GREEN 22
+#define LED_YELLOW 24
+#define LED_RED 26
 #define BUFFSIZE   255
 #define MAX_POWER  400
 #define DELAY 50 // Smaller delay breaks everything about communication
@@ -114,8 +114,8 @@ uint8_t outBuffer[BUFFSIZE];
 char inStringBuffer[BUFFSIZE];
 char outStringBuffer[BUFFSIZE];
 uint32_t bytesRead = 0;
-int blinkGreenTimer, blinkRedTimer;
-bool stateRed,stateGreen;
+int blinkGreenTimer, blinkYellowTimer;
+bool stateYellow,stateGreen;
 bool emergency_mode,warning,FL_edge,FR_edge;
 int emergency_sensor_threshold =880,currentState=IDLE;
 
@@ -141,8 +141,8 @@ void setup() {
   delay(1000);
   Serial.println("All power to the engines!");
   stop(SOFT);
-  blinkGreenTimer=blinkRedTimer= millis();
-  stateGreen=stateRed=true;
+  blinkGreenTimer=blinkYellowTimer= millis();
+  stateGreen=stateYellow=true;
   emergency_mode=warning=false;
   digitalWrite(LED_GREEN, LOW);
   digitalWrite(LED_YELLOW, LOW);
@@ -215,6 +215,8 @@ void loop() {
           Serial.print("ERROR: Command "); Serial.print(command); Serial.print(", param1 "); Serial.print(param1); Serial.print(", param2 "); Serial.print(param2); Serial.println(", is not valid!");
         }
       }
+      stateYellow=false;
+      digitalWrite(LED_YELLOW, stateYellow);
       if (millis()-blinkGreenTimer>300){
         stateGreen=!stateGreen;
         blinkGreenTimer=millis();
@@ -222,10 +224,12 @@ void loop() {
       }
     } 
     else {
-      if (millis()-blinkRedTimer>300){
-        stateRed=!stateRed;
-        blinkRedTimer=millis();
-        digitalWrite(LED_YELLOW, stateRed);   
+      stateGreen=false;
+      digitalWrite(LED_GREEN, stateGreen);
+      if (millis()-blinkYellowTimer>300){
+        stateYellow=!stateYellow;
+        blinkYellowTimer=millis();
+        digitalWrite(LED_YELLOW, stateYellow);   
       }
       Serial.print("*");
     }
