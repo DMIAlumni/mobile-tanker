@@ -121,7 +121,8 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="@string/Chose_a_color"
-                android:id="@+id/DirectionsTextView" android:layout_gravity="center" android:layout_weight="1"/>
+                android:id="@+id/DirectionsTextView" android:layout_gravity="center" android:layout_weight="1"
+                android:textSize="14dp"/>
         <ScrollView
                 android:layout_width="fill_parent"
                 android:layout_height="0dp"
@@ -151,6 +152,14 @@
                     android:id="@+id/debugButton" android:singleLine="true" android:onClick="toggleDebug"
                     android:nestedScrollingEnabled="true" android:layout_gravity="center_vertical"
                     android:gravity="center_vertical|center_horizontal"/>
+            <ToggleButton
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:text="Start/Stop"
+                    android:id="@+id/goButton" android:singleLine="true" android:onClick="toggleGo"
+                    android:nestedScrollingEnabled="true" android:layout_gravity="center_vertical"
+                    android:gravity="center_vertical|center_horizontal" android:textOn="Stop" android:textOff="Start"
+                    android:height="300dp"/>
         </LinearLayout>
 
     </LinearLayout>

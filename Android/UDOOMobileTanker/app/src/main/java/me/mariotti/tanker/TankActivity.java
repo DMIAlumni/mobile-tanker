@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 import me.mariotti.opencv.ColorBlobDetector;
 import me.mariotti.opencv.TargetSearch;
 import me.mariotti.tanker.messaging.Communicator;
@@ -38,6 +39,8 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
     private boolean isColorChosen = false;
     SeekBar hue, saturation, value;
     private Mat mInputFrame;
+    private boolean go = false;
+    private ToggleButton buttonGo;
 
     private TextView text_currentHue, text_currentSaturation, text_currentValue;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -54,6 +57,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
             }
         }
     };
+
 
 
     private void initializeOpenCVDependencies() {
@@ -91,6 +95,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
         text_currentHue = (TextView) findViewById(R.id.text_currentHue);
         text_currentSaturation = (TextView) findViewById(R.id.text_currentSaturation);
         text_currentValue = (TextView) findViewById(R.id.text_currentValue);
+        buttonGo = (ToggleButton) findViewById(R.id.goButton);
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
 
 //        mCommunicator = new Communicator(this);
@@ -99,7 +104,7 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 //        mOpenCvCameraView.getHolder().setFixedSize(960, 540);
-        mOpenCvCameraView.getHolder().setFixedSize(720, 576);
+        mOpenCvCameraView.getHolder().setFixedSize(320, 240);
         mTargetSearch = new TargetSearch(this);
         SeekBar.OnSeekBarChangeListener seekBarListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -183,6 +188,16 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
         }
     }
 
+    public boolean canGo() {
+        return go;
+    }
+
+    public void reset(){
+        isColorChosen=false;
+        go = false;
+        buttonGo.setChecked(false);
+    }
+
     void restoreTargetAnalysisAndCommunication() {
         mArduino.open();
 
@@ -217,7 +232,9 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
     public void toggleDebug(View w) {
         DEBUG = !DEBUG;
     }
-
+    public void toggleGo(View w) {
+        go = !go;
+    }
 
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mInputFrame.cols();

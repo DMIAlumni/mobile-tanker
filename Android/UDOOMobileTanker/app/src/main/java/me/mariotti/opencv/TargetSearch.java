@@ -149,7 +149,7 @@ public class TargetSearch extends VoiceActivity {
         //Scalar mTargetColorHsv;
         mDetector = new ColorBlobDetector();
         Mat mSpectrum = new Mat();
-        Size SPECTRUM_SIZE = new Size(200, 64);
+        Size SPECTRUM_SIZE = new Size(200, 30);
         Scalar CONTOUR_COLOR = GREEN;
         //mTargetColorRgba = BLUE_BOX;
         Scalar mColorRadius = new Scalar(20, 70, 70, 0);
@@ -180,10 +180,10 @@ public class TargetSearch extends VoiceActivity {
         Core.rectangle(mRgba, targetRect.tl(), targetRect.br(), RED, 3);
 
         //mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(new Scalar(360,255,255));
-        Mat colorLabel = mRgba.submat(4, 68, 4, 68);
+        Mat colorLabel = mRgba.submat(4, 34, 4, 34);
         colorLabel.setTo(mTargetColorRgba);
         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
-        Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
+        Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 38, 38 + mSpectrum.cols());
         mSpectrum.copyTo(spectrumLabel);
 
         if (directionsUpdater == null) {
