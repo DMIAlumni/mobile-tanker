@@ -108,12 +108,12 @@ public class TankLogic implements Observer {
             }
 
             if (isAvoidingAnObstacle) {
-                /*if (avoidingDirection == LEFT) {
+                if (avoidingDirection == LEFT) {
                     UpdateDirections.getInstance(mTankActivity).avoidingLeft();
                 } else {
                     UpdateDirections.getInstance(mTankActivity).avoidingRight();
                 }
-                *///While arounding the obstacle he see the target
+                //While arounding the obstacle he see the target
                 if (targetInSight) {
                     Log.i(TAG, "Target seen while arounding the obstacle");
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
@@ -159,7 +159,7 @@ public class TankLogic implements Observer {
                 }
 
             } else {
-//                UpdateDirections.getInstance(mTankActivity).unlock();
+                UpdateDirections.getInstance(mTankActivity).unlock();
                 //Target Found
                 if (distance != 0 && distance < 30 && targetInSight) {
                     if (targetFound) {
@@ -175,7 +175,7 @@ public class TankLogic implements Observer {
                 }
                 //Obstacle on my way
                 if (distance != 0 && distance < 30 && !targetInSight) {
-//                    UpdateDirections.getInstance(mTankActivity).lock();
+                    UpdateDirections.getInstance(mTankActivity).lock();
                     Log.i(TAG, "Obstacle at " + distance + "cm. Starting arounding orocess.");
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
                     isMovingForward = false;
