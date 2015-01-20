@@ -85,7 +85,6 @@ public class TankLogic implements Observer {
                     UpdateDirections.getInstance(mTankActivity).found();
                 }
                 mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 50, MessageEncoderDecoder.TURN_ON_SPOT));
-                long a = System.currentTimeMillis();
                 if (startCheerTime + cheerLenght < System.currentTimeMillis()) {
                     cheer = false;
                     targetFound = false;
@@ -109,7 +108,12 @@ public class TankLogic implements Observer {
             }
 
             if (isAvoidingAnObstacle) {
-                //While arounding the obstacle he see the target
+                /*if (avoidingDirection == LEFT) {
+                    UpdateDirections.getInstance(mTankActivity).avoidingLeft();
+                } else {
+                    UpdateDirections.getInstance(mTankActivity).avoidingRight();
+                }
+                *///While arounding the obstacle he see the target
                 if (targetInSight) {
                     Log.i(TAG, "Target seen while arounding the obstacle");
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
@@ -126,6 +130,7 @@ public class TankLogic implements Observer {
                 Log.i(TAG, "Phase: " + avoidingPhase);
 
                 switch (avoidingPhase) {
+
                     case 1:
                         if (currentPhaseTime == -1) {
                             currentPhaseTime = System.currentTimeMillis();
@@ -154,6 +159,7 @@ public class TankLogic implements Observer {
                 }
 
             } else {
+//                UpdateDirections.getInstance(mTankActivity).unlock();
                 //Target Found
                 if (distance != 0 && distance < 30 && targetInSight) {
                     if (targetFound) {
@@ -169,6 +175,7 @@ public class TankLogic implements Observer {
                 }
                 //Obstacle on my way
                 if (distance != 0 && distance < 30 && !targetInSight) {
+//                    UpdateDirections.getInstance(mTankActivity).lock();
                     Log.i(TAG, "Obstacle at " + distance + "cm. Starting arounding orocess.");
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
                     isMovingForward = false;
@@ -222,7 +229,7 @@ public class TankLogic implements Observer {
                 }
                 lastTargetCenter = targetCenter;
             }
-        }else{
+        } else {
             mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
             stopAvoidingPhase();
             isMovingForward = false;

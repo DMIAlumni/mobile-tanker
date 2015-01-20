@@ -43,7 +43,7 @@ public class UpdateDirections implements Runnable {
         mTextDirection.setText(text);
         mImageDirection.setImageResource(image);
         if (!enabled && image == R.drawable.tavolozza) {
-            enabled = true;
+            unlock();
         }
     }
 
@@ -74,14 +74,13 @@ public class UpdateDirections implements Runnable {
     public void search() {
         if (enabled) {
             text = "Searching...";
-            image = R.drawable.up;
+            image = R.drawable.searching;
             mTankActivity.runOnUiThread(this);
         }
     }
 
     public void found() {
-        enabled = false;
-        text = "Color Found!";
+        lock();
         image = R.drawable.found;
         mTankActivity.runOnUiThread(this);
     }
@@ -100,6 +99,26 @@ public class UpdateDirections implements Runnable {
         text = "Pick a color on the camera stream";
         image = R.drawable.tavolozza;
         mTankActivity.runOnUiThread(this);
+    }
 
+    public void avoidingLeft() {
+        text = "Avoiding obstacle to the left";
+        image = R.drawable.avoid_left;
+        mTankActivity.runOnUiThread(this);
+    }
+
+    public void avoidingRight() {
+
+        text = "Avoiding obstacle to the right";
+        image = R.drawable.avoid_right;
+        mTankActivity.runOnUiThread(this);
+    }
+
+    public void lock() {
+        enabled = false;
+    }
+
+    public void unlock() {
+        enabled = true;
     }
 }
