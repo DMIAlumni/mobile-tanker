@@ -278,7 +278,7 @@ public class TankLogic implements Observer {
                 distance = incomingMessage.getData();
             }
             if (incomingMessage.isTerminateCommand()) {
-                mTankActivity.finish();
+                mTankActivity.finish(); //TODO da eliminare, ho tolto il pulsante su Arduino. Controllare e eliminare
 
             }
             // Do things
