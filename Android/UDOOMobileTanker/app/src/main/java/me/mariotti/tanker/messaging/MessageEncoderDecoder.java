@@ -21,9 +21,8 @@ public class MessageEncoderDecoder {
     private final static int CMD_SEARCH = 10;
 
     //modes
-    public final static int TURN_ON_SPOT=1;
-    public final static int TURN_NORMALLY=2;
-
+    public final static int TURN_ON_SPOT = 1;
+    public final static int TURN_NORMALLY = 2;
 
     // Arduino --> Aandroid codes
     // Message types
@@ -38,8 +37,6 @@ public class MessageEncoderDecoder {
     private final static int STOPPED = 150;
     private final static int MOVING = 151;
     // Infos
-    private final static int SHOOTED = 201;
-    private final static int RELOADED = 202;
     public final static int DISTANCE = 203;
     public final static int TERMINATE = 999;
 
@@ -68,28 +65,20 @@ public class MessageEncoderDecoder {
         return (CMD_STOP + "," + CMD_NULL_VALUE + "," + CMD_NULL_VALUE);
     }
 
-    public static String stop(long stopTime) {
-        return (CMD_STOP + "," + stopTime + "," + CMD_NULL_VALUE);
-    }
-
     public static String turnLeft(int velocity, int mode) {
         return (CMD_LEFT + "," + velocity + "," + mode);
     }
 
     public static String turnLeft(int mode) {
-        return turnLeft(DEFAULT_VELOCITY,mode);
+        return turnLeft(DEFAULT_VELOCITY, mode);
     }
 
-    public static String turnRight(int velocity,int mode) {
+    public static String turnRight(int velocity, int mode) {
         return (CMD_RIGHT + "," + velocity + "," + mode);
     }
 
     public static String turnRight(int mode) {
-        return turnRight(DEFAULT_VELOCITY,mode);
-    }
-
-    public static String shoot() {
-        return (CMD_SHOOT + "," + CMD_NULL_VALUE + "," + CMD_NULL_VALUE);
+        return turnRight(DEFAULT_VELOCITY, mode);
     }
 
     public static String search() {
@@ -97,49 +86,10 @@ public class MessageEncoderDecoder {
     }
 
     public static DecodedMessage decodeIncomingMessage(String mIncomingMessage) {
-        if (!TextUtils.isEmpty(mIncomingMessage)){
-            ArrayList<String> splittedMessage = new ArrayList<String>(Arrays.asList(mIncomingMessage.split(",")));
-            return new DecodedMessage(splittedMessage);
+        if (!TextUtils.isEmpty(mIncomingMessage)) {
+            ArrayList<String> mSplittedMessage = new ArrayList<>(Arrays.asList(mIncomingMessage.split(",")));
+            return new DecodedMessage(mSplittedMessage);
         }
-        return new DecodedMessage(-1,-1,-1,-1);
+        return new DecodedMessage(-1, -1, -1, -1);
     }
-
-    // Arduino --> Android messages
-    /*public static HashMap<String, Integer> decodeIncomingMessage(String mIncomingMessage) {
-        if (TankActivity.DEBUG) {
-            Log.i(TAG, "mIncomingMessage: " + mIncomingMessage);
-        }
-        HashMap<String, Integer> parsedMessage = new HashMap<String, Integer>(3);
-        ArrayList<String> splittedMessage = new ArrayList<String>(Arrays.asList(mIncomingMessage.split(",")));
-
-        int messageType = Integer.valueOf(splittedMessage.get(0));
-
-        switch (messageType) {
-            case INFO: {
-                parsedMessage.put("MSG_TYPE", INFO);
-                parsedMessage.put("INFO_MSG", Integer.valueOf(splittedMessage.get(1)));
-                if (parsedMessage.get("INFO_MSG") == DISTANCE) {
-                    parsedMessage.put("DISTANCE", Integer.valueOf(splittedMessage.get(2)));
-                }
-                parsedMessage.put("ERROR", 0);
-                break;
-            }
-            case STATE: {
-                parsedMessage.put("MSG_TYPE", STATE);
-                parsedMessage.put("STATE", Integer.valueOf(splittedMessage.get(1)));
-                if (parsedMessage.get("STATE") == HUNTING || parsedMessage.get("STATE") == SEARCHING) {
-                    parsedMessage.put("ACTION", Integer.valueOf(splittedMessage.get(2)));
-                }
-                parsedMessage.put("ERROR", 0);
-                break;
-            }
-            default: {
-                parsedMessage.put("ERROR", -1);
-            }
-        }
-        if (TankActivity.DEBUG) {
-            Log.i(TAG, "parsedMessage: " + parsedMessage.toString());
-        }
-        return parsedMessage;
-    }*/
 }
