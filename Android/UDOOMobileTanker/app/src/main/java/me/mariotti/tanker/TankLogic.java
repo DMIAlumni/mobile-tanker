@@ -1,7 +1,6 @@
 package me.mariotti.tanker;
 
 import android.util.Log;
-import me.mariotti.opencv.UpdateDirections;
 import me.mariotti.tanker.messaging.Communicator;
 import me.mariotti.tanker.messaging.DecodedMessage;
 import me.mariotti.tanker.messaging.MessageEncoderDecoder;

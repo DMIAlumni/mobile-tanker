@@ -1,13 +1,8 @@
-package me.mariotti.opencv;
+package me.mariotti.tanker;
 
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import me.mariotti.tanker.R;
-import me.mariotti.tanker.TankActivity;
-import me.mariotti.tanker.TankLogic;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
 
 public class UpdateDirections implements Runnable {
 

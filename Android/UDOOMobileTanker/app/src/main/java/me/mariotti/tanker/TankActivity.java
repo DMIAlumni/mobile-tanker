@@ -1,5 +1,6 @@
 package me.mariotti.tanker;
 
+import android.app.Activity;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
@@ -15,7 +16,6 @@ import android.widget.ToggleButton;
 import me.mariotti.opencv.ColorBlobDetector;
 import me.mariotti.opencv.TargetSearch;
 import me.mariotti.tanker.messaging.Communicator;
-import me.mariotti.voice.VoiceActivity;
 import me.palazzetti.adktoolkit.AdkManager;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -26,29 +26,27 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 
-public class TankActivity extends VoiceActivity implements CvCameraViewListener, View.OnTouchListener {
-    private static final int VOICE_COLOR = 1;
+public class TankActivity extends Activity implements CvCameraViewListener, View.OnTouchListener {
     private final String TAG = "TankActivity";
     public static boolean DEBUG = false;
     private CameraBridgeViewBase mOpenCvCameraView;
-//    private CascadeClassifier mFaceCascadeClassifier;
     public Communicator mCommunicator;
     public AdkManager mArduino;
     private TargetSearch mTargetSearch;
     public TankLogic mTankLogic;
-    private boolean isColorChosen = false;
-    SeekBar hue, saturation, value;
+    private boolean mIsColorChosen = false;
+    private SeekBar mHue, mSaturation, mValue;
     private Mat mInputFrame;
-    private boolean go = false;
-    private ToggleButton buttonGo;
+    private boolean mGo = false;
+    private ToggleButton mButtonGo;
+    private TextView mTextCurrentHue, mTextCurrentSaturation, mTextCurrentValue;
 
-    private TextView text_currentHue, text_currentSaturation, text_currentValue;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
-                    initializeOpenCVDependencies();
+                    initializeOpenCV();
                     mOpenCvCameraView.setOnTouchListener(TankActivity.this);
                     break;
                 default:
@@ -58,71 +56,42 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
         }
     };
 
-
-
-    private void initializeOpenCVDependencies() {
-    /*    try {
-            // Copy the Face cascade file into a temp file so OpenCV can load it
-            InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
-            File mCascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-            File mCascadeFileF = new File(mCascadeDir, "faceDetection.xml");
-            FileOutputStream os = new FileOutputStream(mCascadeFileF);
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-                os.write(buffer, 0, bytesRead);
-            }
-            is.close();
-            os.close();
-            // Load the cascade classifier
-            mFaceCascadeClassifier = new CascadeClassifier(mCascadeFileF.getAbsolutePath());
-            Log.i(TAG, "Face Cascade File loaded");
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading cascades", e);
-        }*/
-        // And we are ready to go
-        mOpenCvCameraView.enableView();
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.mobile_tank);
-        hue = (SeekBar) findViewById(R.id.seekBarHue);
-        saturation = (SeekBar) findViewById(R.id.seekBarSaturation);
-        value = (SeekBar) findViewById(R.id.seekBarValue);
-        text_currentHue = (TextView) findViewById(R.id.text_currentHue);
-        text_currentSaturation = (TextView) findViewById(R.id.text_currentSaturation);
-        text_currentValue = (TextView) findViewById(R.id.text_currentValue);
-        buttonGo = (ToggleButton) findViewById(R.id.goButton);
+        mHue = (SeekBar) findViewById(R.id.seekBarHue);
+        mSaturation = (SeekBar) findViewById(R.id.seekBarSaturation);
+        mValue = (SeekBar) findViewById(R.id.seekBarValue);
+        mTextCurrentHue = (TextView) findViewById(R.id.text_currentHue);
+        mTextCurrentSaturation = (TextView) findViewById(R.id.text_currentSaturation);
+        mTextCurrentValue = (TextView) findViewById(R.id.text_currentValue);
+        mButtonGo = (ToggleButton) findViewById(R.id.goButton);
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
-
-//        mCommunicator = new Communicator(this);
-//        mTankLogic=new TankLogic(mCommunicator,this);
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
-//        mOpenCvCameraView.getHolder().setFixedSize(960, 540);
         mOpenCvCameraView.getHolder().setFixedSize(320, 240);
         mTargetSearch = new TargetSearch(this);
+
         SeekBar.OnSeekBarChangeListener seekBarListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 progress = progress / 10;
-                if (seekBar == hue) {
-                    text_currentHue.setText(String.valueOf(progress) + "°");
+                if (seekBar == mHue) {
+                    mTextCurrentHue.setText(String.valueOf(progress) + "°");
                 }
-                if (seekBar == saturation) {
-                    text_currentSaturation.setText(String.valueOf(progress) + "%");
+                if (seekBar == mSaturation) {
+                    mTextCurrentSaturation.setText(String.valueOf(progress) + "%");
                 }
-                if (seekBar == value) {
-                    text_currentValue.setText(String.valueOf(progress) + "%");
+                if (seekBar == mValue) {
+                    mTextCurrentValue.setText(String.valueOf(progress) + "%");
                 }
                 //Convert the seekbars range (360*10 for H and 100*10 for S,V) to OpenCV value for HSV (H: 0-255, S: 0-255, V: 0-255)
-                mTargetSearch.setTargetHSVColor(hue.getProgress() / 10 * 255 / 360,
-                                                saturation.getProgress() / 10 * 255 / 100,
-                                                value.getProgress() / 10 * 255 / 100);
+                mTargetSearch.setTargetHSVColor(mHue.getProgress() / 10 * 255 / 360,
+                                                mSaturation.getProgress() / 10 * 255 / 100,
+                                                mValue.getProgress() / 10 * 255 / 100);
             }
 
             @Override
@@ -134,16 +103,14 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
             }
         };
 
-        hue.setOnSeekBarChangeListener(seekBarListener);
-        saturation.setOnSeekBarChangeListener(seekBarListener);
-        value.setOnSeekBarChangeListener(seekBarListener);
+        mHue.setOnSeekBarChangeListener(seekBarListener);
+        mSaturation.setOnSeekBarChangeListener(seekBarListener);
+        mValue.setOnSeekBarChangeListener(seekBarListener);
     }
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        mTargetSearch.setmGrayscaleImage(new Mat(height, width, CvType.CV_8UC1));
-        // The faces will be about a 20% of the height of the screen
-        mTargetSearch.setAbsoluteFaceSize((int) (height * 0.2));
+        mTargetSearch.setGrayscaleImage(new Mat(height, width, CvType.CV_8UC1));
     }
 
     @Override
@@ -155,16 +122,13 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
         //flip horizontally and vertically due to camera physical position
         Core.flip(aInputFrame, aInputFrame, -1);
         mInputFrame = aInputFrame;
-//        return mTargetSearch.searchFaces(aInputFrame, mFaceCascadeClassifier);
-//        return mTargetSearch.searchContour(aInputFrame);
-        return isColorChosen ? mTargetSearch.searchColours(aInputFrame) : aInputFrame;
+        return mIsColorChosen ? mTargetSearch.searchColours(aInputFrame) : aInputFrame;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mCommunicator.setKeepAlive(false);
-        //mArduino.close();
     }
 
     @Override
@@ -183,30 +147,28 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
         restoreTargetAnalysisAndCommunication();
-        if (!isColorChosen) {
+        if (!mIsColorChosen) {
             //listen(VOICE_COLOR); TODO Uncomment
         }
     }
 
     public boolean canGo() {
-        return go;
+        return mGo;
     }
 
     public void reset(){
-        isColorChosen=false;
-        go = false;
+        mIsColorChosen =false;
+        mGo = false;
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                buttonGo.setChecked(false);
+                mButtonGo.setChecked(false);
             }
         });
-
     }
 
     void restoreTargetAnalysisAndCommunication() {
         mArduino.open();
-
         //let communicator's AsyncTask ends and clear the reference to it. !=null check is for avoid NullPointException on
         //first run
         if (mCommunicator != null) {
@@ -216,33 +178,23 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
         mTankLogic = new TankLogic(mCommunicator, this);
     }
 
-    @Override
-    public void recognitionResults(int requestCode, String bestMatch) {
-        if (requestCode == VOICE_COLOR) {
-            if (bestMatch.contains("blu")) {
-                mTargetSearch.setTargetColorToBlue();
-            } else if (bestMatch.contains("rosso")) {
-                mTargetSearch.setTargetColorToRed();
-            } else if (bestMatch.contains("giallo")) {
-                mTargetSearch.setTargetColorToYellow();
-            } else if (bestMatch.contains("verde")) {
-                mTargetSearch.setTargetColorToGreen();
-            } else {//try until we get a color
-                listen(VOICE_COLOR);
-            }
-        }
-        isColorChosen = true;
-        Log.w(TAG, bestMatch);
-    }
+
 
     public void toggleDebug(View w) {
         DEBUG = !DEBUG;
     }
+
     public void toggleGo(View w) {
-        go = !go;
+        mGo = !mGo;
     }
 
+    private void initializeOpenCV() {
+        mOpenCvCameraView.enableView();
+    }
+
+
     public boolean onTouch(View v, MotionEvent event) {
+        Mat mTouchedRegionHsv = new Mat();
         int cols = mInputFrame.cols();
         int rows = mInputFrame.rows();
 
@@ -257,24 +209,23 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
 
         if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
 
-        Rect touchedRect = new Rect();
+        Rect mTouchedRect = new Rect();
 
-        touchedRect.x = (x > 4) ? x - 4 : 0;
-        touchedRect.y = (y > 4) ? y - 4 : 0;
+        mTouchedRect.x = (x > 4) ? x - 4 : 0;
+        mTouchedRect.y = (y > 4) ? y - 4 : 0;
 
-        touchedRect.width = (x + 4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
-        touchedRect.height = (y + 4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
+        mTouchedRect.width = (x + 4 < cols) ? x + 4 - mTouchedRect.x : cols - mTouchedRect.x;
+        mTouchedRect.height = (y + 4 < rows) ? y + 4 - mTouchedRect.y : rows - mTouchedRect.y;
 
-        Mat touchedRegionRgba = mInputFrame.submat(touchedRect);
+        Mat mTouchedRegionRgba = mInputFrame.submat(mTouchedRect);
 
-        Mat touchedRegionHsv = new Mat();
-        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+        Imgproc.cvtColor(mTouchedRegionRgba, mTouchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
 
         // Calculate average color of touched region
-        Scalar mBlobColorHsv = Core.sumElems(touchedRegionHsv);
-        int pointCount = touchedRect.width * touchedRect.height;
+        Scalar mBlobColorHsv = Core.sumElems(mTouchedRegionHsv);
+        int mPointCount = mTouchedRect.width * mTouchedRect.height;
         for (int i = 0; i < mBlobColorHsv.val.length; i++)
-            mBlobColorHsv.val[i] /= pointCount;
+            mBlobColorHsv.val[i] /= mPointCount;
 
         Scalar mBlobColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(mBlobColorHsv);
 
@@ -284,14 +235,14 @@ public class TankActivity extends VoiceActivity implements CvCameraViewListener,
                    ", " + mBlobColorHsv.val[2] + ", " + mBlobColorHsv.val[3] + ")");
 
         mTargetSearch.setTargetHSVColor(mBlobColorHsv);
-        hue.setProgress((int) mBlobColorHsv.val[0] * 10 * 360 / 255);
-        saturation.setProgress((int) mBlobColorHsv.val[1] * 10 * 100 / 255);
-        value.setProgress((int) mBlobColorHsv.val[2] * 10 * 100 / 255);
+        mHue.setProgress((int) mBlobColorHsv.val[0] * 10 * 360 / 255);
+        mSaturation.setProgress((int) mBlobColorHsv.val[1] * 10 * 100 / 255);
+        mValue.setProgress((int) mBlobColorHsv.val[2] * 10 * 100 / 255);
 
-        isColorChosen = true;
+        mIsColorChosen = true;
 
-        touchedRegionRgba.release();
-        touchedRegionHsv.release();
+        mTouchedRegionRgba.release();
+        mTouchedRegionHsv.release();
 
         return false; // don't need subsequent touch events
     }

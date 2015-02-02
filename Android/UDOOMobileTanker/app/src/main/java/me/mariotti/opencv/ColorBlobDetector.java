@@ -32,60 +32,47 @@ public class ColorBlobDetector {
     Mat mDilatedMask = new Mat();
     Mat mHierarchy = new Mat();
 
-    public void setColorRadius(Scalar radius) {
-        mColorRadius = radius;
-    }
 
-    public static Scalar convertScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
-        Log.i(TAG, "Source HSV color: (" + hsvColor.val[0] + ", " + hsvColor.val[1] +
-                  ", " + hsvColor.val[2] + ", " + hsvColor.val[3] + ")");
-        Log.i(TAG, "Converted RGBA color: (" + (new Scalar(pointMatRgba.get(0, 0))).val[0] +
-                   ", " + (new Scalar(pointMatRgba.get(0, 0))).val[1] + ", " + (new Scalar(pointMatRgba.get(0, 0))).val[2] + ", " + (new Scalar(pointMatRgba.get(0, 0))).val[3] + ")");
-        return new Scalar(pointMatRgba.get(0, 0));
+
+    public static Scalar convertScalarHsv2Rgba(Scalar mHsvColor) {
+        Mat mPointMatRgba = new Mat();
+        Mat mPointMatHsv = new Mat(1, 1, CvType.CV_8UC3, mHsvColor);
+        Imgproc.cvtColor(mPointMatHsv, mPointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+        Log.i(TAG, "Source HSV color: (" + mHsvColor.val[0] + ", " + mHsvColor.val[1] +
+                  ", " + mHsvColor.val[2] + ", " + mHsvColor.val[3] + ")");
+        Log.i(TAG, "Converted RGBA color: (" + (new Scalar(mPointMatRgba.get(0, 0))).val[0] +
+                   ", " + (new Scalar(mPointMatRgba.get(0, 0))).val[1] + ", " + (new Scalar(mPointMatRgba.get(0, 0))).val[2] + ", " + (new Scalar(mPointMatRgba.get(0, 0))).val[3] + ")");
+        return new Scalar(mPointMatRgba.get(0, 0));
     }
 
     public Scalar convertScalarRgba2Hsv(Scalar rgbaColor) {
-        Mat pointMatHsv = new Mat();
-        Mat pointMatRgba = new Mat(1, 1, CvType.CV_8UC3, rgbaColor);
-        Imgproc.cvtColor(pointMatRgba, pointMatHsv, Imgproc.COLOR_RGB2HSV_FULL);
-        return new Scalar(pointMatHsv.get(0, 0));
+        Mat mPointMatHsv = new Mat();
+        Mat mPointMatRgba = new Mat(1, 1, CvType.CV_8UC3, rgbaColor);
+        Imgproc.cvtColor(mPointMatRgba, mPointMatHsv, Imgproc.COLOR_RGB2HSV_FULL);
+        return new Scalar(mPointMatHsv.get(0, 0));
     }
 
-    public void setHsvColor(Scalar hsvColor) {
-        double minH = (hsvColor.val[0] >= mColorRadius.val[0]) ? hsvColor.val[0] - mColorRadius.val[0] : 0;
-        double maxH = (hsvColor.val[0] + mColorRadius.val[0] <= 360) ? hsvColor.val[0] + mColorRadius.val[0] : 360;
+    public void setHsvColor(Scalar mHsvColor) {
+        double mMinH = (mHsvColor.val[0] >= mColorRadius.val[0]) ? mHsvColor.val[0] - mColorRadius.val[0] : 0;
+        double mMaxH = (mHsvColor.val[0] + mColorRadius.val[0] <= 360) ? mHsvColor.val[0] + mColorRadius.val[0] : 360;
 
-        mLowerBound.val[0] = minH;
-        mUpperBound.val[0] = maxH;
-        mLowerBound.val[1] = hsvColor.val[1] - mColorRadius.val[1];
-        mUpperBound.val[1] = hsvColor.val[1] + mColorRadius.val[1];
-
-        mLowerBound.val[2] = hsvColor.val[2] - mColorRadius.val[2];
-        mUpperBound.val[2] = hsvColor.val[2] + mColorRadius.val[2];
-
+        mLowerBound.val[0] = mMinH;
+        mUpperBound.val[0] = mMaxH;
+        mLowerBound.val[1] = mHsvColor.val[1] - mColorRadius.val[1];
+        mUpperBound.val[1] = mHsvColor.val[1] + mColorRadius.val[1];
+        mLowerBound.val[2] = mHsvColor.val[2] - mColorRadius.val[2];
+        mUpperBound.val[2] = mHsvColor.val[2] + mColorRadius.val[2];
         mLowerBound.val[3] = 0;
         mUpperBound.val[3] = 255;
 
-        Mat spectrumHsv = new Mat(1, (int) (maxH - minH), CvType.CV_8UC3);
+        Mat mSpectrumHsv = new Mat(1, (int) (mMaxH - mMinH), CvType.CV_8UC3);
 
-        for (int j = 0; j < maxH - minH; j++) {
-            byte[] tmp = {(byte) (minH + j), (byte) hsvColor.val[1], (byte) hsvColor.val[2]};
-            spectrumHsv.put(0, j, tmp);
+        for (int j = 0; j < mMaxH - mMinH; j++) {
+            byte[] tmp = {(byte) (mMinH + j), (byte) mHsvColor.val[1], (byte) mHsvColor.val[2]};
+            mSpectrumHsv.put(0, j, tmp);
         }
 
-        Imgproc.cvtColor(spectrumHsv, mSpectrum, Imgproc.COLOR_HSV2RGB_FULL, 4);
-    }
-
-    public Mat getSpectrum() {
-
-        return mSpectrum;
-    }
-
-    public void setMinContourArea(double area) {
-        mMinContourArea = area;
+        Imgproc.cvtColor(mSpectrumHsv, mSpectrum, Imgproc.COLOR_HSV2RGB_FULL, 4);
     }
 
     public void process(Mat rgbaImage) {
@@ -97,33 +84,46 @@ public class ColorBlobDetector {
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
 
-        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
 
-        Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mDilatedMask, mContours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Find max contour area
-        double maxArea = 0;
-        Iterator<MatOfPoint> each = contours.iterator();
-        while (each.hasNext()) {
-            MatOfPoint wrapper = each.next();
-            double area = Imgproc.contourArea(wrapper);
-            if (area > maxArea)
-                maxArea = area;
+        double mMaxArea = 0;
+        Iterator<MatOfPoint> mEach = mContours.iterator();
+        while (mEach.hasNext()) {
+            MatOfPoint mWrapper = mEach.next();
+            double mArea = Imgproc.contourArea(mWrapper);
+            if (mArea > mMaxArea)
+                mMaxArea = mArea;
         }
 
         // Filter contours by area and resize to fit the original image size
-        mContours.clear();
-        each = contours.iterator();
-        while (each.hasNext()) {
-            MatOfPoint contour = each.next();
-            if (Imgproc.contourArea(contour) > mMinContourArea * maxArea) {
-                Core.multiply(contour, new Scalar(4, 4), contour);
-                mContours.add(contour);
+        this.mContours.clear();
+        mEach = mContours.iterator();
+        while (mEach.hasNext()) {
+            MatOfPoint mContour = mEach.next();
+            if (Imgproc.contourArea(mContour) > mMinContourArea * mMaxArea) {
+                Core.multiply(mContour, new Scalar(4, 4), mContour);
+                this.mContours.add(mContour);
             }
         }
     }
 
     public List<MatOfPoint> getContours() {
         return mContours;
+    }
+
+    public Mat getSpectrum() {
+
+        return mSpectrum;
+    }
+
+    public void setMinContourArea(double mArea) {
+        mMinContourArea = mArea;
+    }
+
+    public void setColorRadius(Scalar radius) {
+        mColorRadius = radius;
     }
 }
