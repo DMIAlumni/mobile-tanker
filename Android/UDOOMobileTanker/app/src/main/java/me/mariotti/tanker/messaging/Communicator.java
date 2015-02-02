@@ -14,17 +14,17 @@ import java.util.Date;
 
 public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private final String TAG = "Communicator";
-    private final TankActivity mActivity;
     private final int DELAY = 50;
     private TextView mLogTextView;
-    private String mOutgoing = MessageEncoderDecoder.stop(), mLastSent = "", mLastReceived = "";
+    private String mOutgoing = MessageEncoderDecoder.stop(),
+                   mLastSent = "",
+                   mLastReceived = "";
     private AdkManager mArduino;
-    boolean mKeepAlive = true;
+    private boolean mKeepAlive = true;
     public IncomingMessage mIncomingMessageObservable;
 
     public Communicator(TankActivity mActivity) {
         mArduino = mActivity.mArduino;
-        this.mActivity = mActivity;
         mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
         mIncomingMessageObservable = new IncomingMessage();
         execute();
@@ -92,8 +92,5 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
 
     public void setKeepAlive(boolean mKeepAlive) {
         this.mKeepAlive = mKeepAlive;
-    }
-    public boolean getKeepAlive() {
-        return this.mKeepAlive;
     }
 }
