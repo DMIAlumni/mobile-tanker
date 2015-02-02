@@ -4,15 +4,15 @@ import java.util.Observable;
 
 //This is just an Observable wrapper for the incoming message
 public class IncomingMessage extends Observable {
-    private String message = "";
+    private String mMessage = "";
 
-    protected void setIncoming(String incoming) {
-        message = incoming;
+    protected void setIncoming(String mIncoming) {
+        mMessage = mIncoming;
         triggerObservers();
     }
 
     public String getIncoming() {
-        return message;
+        return mMessage;
     }
 
     private void triggerObservers() {
