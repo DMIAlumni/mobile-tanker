@@ -8,112 +8,111 @@ public class UpdateDirections implements Runnable {
 
     private ImageView mImageDirection;
     private TextView mTextDirection = null;
-    private int image;
-    private String text;
-    private int isVisible = View.INVISIBLE;
+    private int mImage;
+    private String mText;
+    private int mIsVisible = View.INVISIBLE;
     private TankActivity mTankActivity;
-    private static UpdateDirections instance;
-    private boolean enabled = true;
+    private static UpdateDirections mInstance;
+    private boolean mEnabled = true;
 
     private UpdateDirections(TankActivity mTankActivity) {
         this.mTankActivity = mTankActivity;
         mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
         mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
-        instance = this;
+        mInstance = this;
     }
 
-    UpdateDirections() {
-    }
+    private UpdateDirections() {}
 
-    static public UpdateDirections getInstance(TankActivity mTankActivity) {
-        if (instance == null) {
-            instance = new UpdateDirections(mTankActivity);
+    static public synchronized UpdateDirections getInstance(TankActivity mTankActivity) {
+        if (mInstance == null) {
+            mInstance = new UpdateDirections(mTankActivity);
         }
-        return instance;
+        return mInstance;
     }
 
     public void run() {
-        mTextDirection.setVisibility(isVisible);
-        mImageDirection.setVisibility(isVisible);
-        mTextDirection.setText(text);
-        mImageDirection.setImageResource(image);
-        if (!enabled && image == R.drawable.tavolozza) {
+        mTextDirection.setVisibility(mIsVisible);
+        mImageDirection.setVisibility(mIsVisible);
+        mTextDirection.setText(mText);
+        mImageDirection.setImageResource(mImage);
+        if (!mEnabled && mImage == R.drawable.tavolozza) {
             unlock();
         }
     }
 
     public void left() {
-        if (enabled) {
-            text = "Turn Left";
-            image = R.drawable.left;
+        if (mEnabled) {
+            mText = "Turn Left";
+            mImage = R.drawable.left;
             mTankActivity.runOnUiThread(this);
         }
     }
 
     public void right() {
-        if (enabled) {
-            text = "Turn Right";
-            image = R.drawable.right;
+        if (mEnabled) {
+            mText = "Turn Right";
+            mImage = R.drawable.right;
             mTankActivity.runOnUiThread(this);
         }
     }
 
     public void aimed() {
-        if (enabled) {
-            text = "Target in sight, aimed!";
-            image = R.drawable.aimed;
+        if (mEnabled) {
+            mText = "Target in sight, aimed!";
+            mImage = R.drawable.aimed;
             mTankActivity.runOnUiThread(this);
         }
     }
 
     public void search() {
-        if (enabled) {
-            text = "Searching...";
-            image = R.drawable.searching;
+        if (mEnabled) {
+            mText = "Searching...";
+            mImage = R.drawable.searching;
             mTankActivity.runOnUiThread(this);
         }
     }
 
     public void found() {
         lock();
-        image = R.drawable.found;
+        mImage = R.drawable.found;
         mTankActivity.runOnUiThread(this);
     }
 
     public void show() {
-        isVisible = View.VISIBLE;
+        mIsVisible = View.VISIBLE;
         mTankActivity.runOnUiThread(this);
     }
 
     public void hide() {
-        isVisible = View.INVISIBLE;
+        mIsVisible = View.INVISIBLE;
         mTankActivity.runOnUiThread(this);
     }
 
     public void chooseColor() {
-        text = "Pick a color on the camera stream";
-        image = R.drawable.tavolozza;
+        mText = "Pick a color on the camera stream";
+        mImage = R.drawable.tavolozza;
         mTankActivity.runOnUiThread(this);
     }
 
     public void avoidingLeft() {
-        text = "Avoiding obstacle to the left";
-        image = R.drawable.avoid_left;
+        mText = "Avoiding obstacle to the left";
+        mImage = R.drawable.avoid_left;
         mTankActivity.runOnUiThread(this);
     }
 
     public void avoidingRight() {
 
-        text = "Avoiding obstacle to the right";
-        image = R.drawable.avoid_right;
+        mText = "Avoiding obstacle to the right";
+        mImage = R.drawable.avoid_right;
         mTankActivity.runOnUiThread(this);
     }
 
     public void lock() {
-        enabled = false;
+        mEnabled = false;
     }
 
     public void unlock() {
-        enabled = true;
+        mEnabled = true;
     }
 }
