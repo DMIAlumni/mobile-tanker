@@ -4,7 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
 import me.mariotti.tanker.R;
-import me.mariotti.tanker.TankActivity;
+import me.mariotti.tanker.RobotActivity;
 import me.palazzetti.adktoolkit.AdkManager;
 
 import java.text.DateFormat;
@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-public class Communicator extends AsyncTask<TankActivity, String, Void> {
+public class Communicator extends AsyncTask<RobotActivity, String, Void> {
     private final String TAG = "Communicator";
     private final int DELAY = 50;
     private TextView mLogTextView;
@@ -23,7 +23,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     private boolean mKeepAlive = true;
     public IncomingMessage mIncomingMessageObservable;
 
-    public Communicator(TankActivity mActivity) {
+    public Communicator(RobotActivity mActivity) {
         mArduino = mActivity.mArduino;
         mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
         mIncomingMessageObservable = new IncomingMessage();
@@ -33,7 +33,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     @Override
     protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
-        if (TankActivity.DEBUG) {
+        if (RobotActivity.DEBUG) {
             int length = mLogTextView.getText().length();
             if (length < 10000) {
                 mLogTextView.append(values[0] + '\n');
@@ -44,7 +44,7 @@ public class Communicator extends AsyncTask<TankActivity, String, Void> {
     }
 
     @Override
-    protected Void doInBackground(TankActivity... params) {
+    protected Void doInBackground(RobotActivity... params) {
         DateFormat mDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
         while (mKeepAlive) {
             try {

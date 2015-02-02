@@ -4,7 +4,7 @@ package me.mariotti.opencv;
 import android.util.Log;
 import android.widget.ImageView;
 import me.mariotti.tanker.R;
-import me.mariotti.tanker.TankActivity;
+import me.mariotti.tanker.RobotActivity;
 import me.mariotti.tanker.TankLogic;
 import me.mariotti.tanker.UpdateDirections;
 import org.opencv.core.*;
@@ -16,7 +16,7 @@ import java.util.List;
 
 public class TargetSearch {
     private final String TAG = "TargetSearch";
-    private TankActivity mTankActivity;
+    private RobotActivity mRobotActivity;
     private TankLogic mTankLogic;
     private Mat mGrayscaleImage;
     private Rect mTarget;
@@ -29,10 +29,10 @@ public class TargetSearch {
     private Rect mNullTarget;
 
 
-    public TargetSearch(TankActivity mTankActivity) {
-        this.mTankActivity = mTankActivity;
-        mTankLogic = mTankActivity.mTankLogic;
-        ImageView mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
+    public TargetSearch(RobotActivity mRobotActivity) {
+        this.mRobotActivity = mRobotActivity;
+        mTankLogic = mRobotActivity.mTankLogic;
+        ImageView mImageDirection = (ImageView) mRobotActivity.findViewById(R.id.DirectionsImageView);
         mImageDirection.setImageResource(R.drawable.tavolozza);
         mNullTarget = new Rect(0, 0, 0, 0);
     }
@@ -77,12 +77,12 @@ public class TargetSearch {
         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
         Mat mSpectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 38, 38 + mSpectrum.cols());
         mSpectrum.copyTo(mSpectrumLabel);
-        mDirectionsUpdater = UpdateDirections.getInstance(mTankActivity);
+        mDirectionsUpdater = UpdateDirections.getInstance(mRobotActivity);
 
         if (mTarget != mNullTarget) {
             mDirectionsUpdater.show();
             //if after a resume the tank logic instance has changed update it
-            mTankLogic = mTankLogic != mTankActivity.mTankLogic ? mTankActivity.mTankLogic : mTankLogic;
+            mTankLogic = mTankLogic != mRobotActivity.mTankLogic ? mRobotActivity.mTankLogic : mTankLogic;
 
             mTankLogic.frameWidth(mRgba.width());
             mTankLogic.frameHeight(mRgba.height());
@@ -109,7 +109,7 @@ public class TargetSearch {
         }
 
         //mDirectionsUpdater.setTarget(targetRect);
-        //mTankActivity.runOnUiThread(mDirectionsUpdater);
+        //mRobotActivity.runOnUiThread(mDirectionsUpdater);
 
         return mRgba;
     }

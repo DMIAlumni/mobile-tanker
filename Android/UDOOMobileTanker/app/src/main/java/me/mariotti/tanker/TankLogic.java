@@ -19,7 +19,7 @@ public class TankLogic implements Observer {
     public final static int RIGHT = 1;
     private final String TAG = "TankLogic";
     private Communicator mCommunicator;
-    private TankActivity mTankActivity;
+    private RobotActivity mRobotActivity;
     private Boolean mTargetInSight = false;
     private int mTargetDirection;
     private Point mTargetCenter;
@@ -41,9 +41,9 @@ public class TankLogic implements Observer {
     private long mStartCheerTime = -1;
 
 
-    public TankLogic(Communicator mCommunicator, TankActivity tankActivity) {
+    public TankLogic(Communicator mCommunicator, RobotActivity robotActivity) {
         this.mCommunicator = mCommunicator;
-        mTankActivity = tankActivity;
+        mRobotActivity = robotActivity;
         mCommunicator.mIncomingMessageObservable.addObserver(this);
     }
 
@@ -71,12 +71,12 @@ public class TankLogic implements Observer {
     }
 
     private void think() {
-        if (mTankActivity.canGo()) {
+        if (mRobotActivity.canGo()) {
             if (mCheer) {
                 if (mStartCheerTime == -1) {
                     mStartCheerTime = System.currentTimeMillis();
                     Log.i(TAG, "Target at " + mDistance + "cm. CHEER.");
-                    UpdateDirections.getInstance(mTankActivity).found();
+                    UpdateDirections.getInstance(mRobotActivity).found();
                 }
                 mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 50, MessageEncoderDecoder.TURN_ON_SPOT));
                 int mCheerLength = 3000;
@@ -84,10 +84,10 @@ public class TankLogic implements Observer {
                     mCheer = false;
                     mTargetFound = false;
                     mStartCheerTime = -1;
-                    mTankActivity.reset();
+                    mRobotActivity.reset();
                     Log.i(TAG, "Stop searching. Choose a new color to find");
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-                    UpdateDirections.getInstance(mTankActivity).chooseColor();
+                    UpdateDirections.getInstance(mRobotActivity).chooseColor();
                 }
                 return;
             }
@@ -104,9 +104,9 @@ public class TankLogic implements Observer {
 
             if (mIsAvoidingAnObstacle) {
                 if (mAvoidingDirection == LEFT) {
-                    UpdateDirections.getInstance(mTankActivity).avoidingLeft();
+                    UpdateDirections.getInstance(mRobotActivity).avoidingLeft();
                 } else {
-                    UpdateDirections.getInstance(mTankActivity).avoidingRight();
+                    UpdateDirections.getInstance(mRobotActivity).avoidingRight();
                 }
                 //While arounding the obstacle he see the target
                 if (mTargetInSight) {
@@ -145,7 +145,7 @@ public class TankLogic implements Observer {
                     case 4:
                 }
             } else {
-                UpdateDirections.getInstance(mTankActivity).unlock();
+                UpdateDirections.getInstance(mRobotActivity).unlock();
                 //Target Found
                 if (mDistance != 0 && mDistance < 30 && mTargetInSight) {
                     if (mTargetFound) {
@@ -161,7 +161,7 @@ public class TankLogic implements Observer {
                 }
                 //Obstacle on my way
                 if (mDistance != 0 && mDistance < 30 && !mTargetInSight) {
-                    UpdateDirections.getInstance(mTankActivity).lock();
+                    UpdateDirections.getInstance(mRobotActivity).lock();
                     Log.i(TAG, "Obstacle at " + mDistance + "cm. Starting arounding orocess.");
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
                     mIsMovingForward = false;
@@ -265,7 +265,7 @@ public class TankLogic implements Observer {
                 mDistance = incomingMessage.getData();
             }
             if (incomingMessage.isTerminateCommand()) {
-                mTankActivity.finish(); //TODO da eliminare, ho tolto il pulsante su Arduino. Controllare e eliminare
+                mRobotActivity.finish(); //TODO da eliminare, ho tolto il pulsante su Arduino. Controllare e eliminare
             }
         }
     }

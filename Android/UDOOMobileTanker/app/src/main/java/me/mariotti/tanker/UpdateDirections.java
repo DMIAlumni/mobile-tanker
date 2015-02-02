@@ -11,22 +11,22 @@ public class UpdateDirections implements Runnable {
     private int mImage;
     private String mText;
     private int mIsVisible = View.INVISIBLE;
-    private TankActivity mTankActivity;
+    private RobotActivity mRobotActivity;
     private static UpdateDirections mInstance;
     private boolean mEnabled = true;
 
-    private UpdateDirections(TankActivity mTankActivity) {
-        this.mTankActivity = mTankActivity;
-        mImageDirection = (ImageView) mTankActivity.findViewById(R.id.DirectionsImageView);
-        mTextDirection = (TextView) mTankActivity.findViewById(R.id.DirectionsTextView);
+    private UpdateDirections(RobotActivity mRobotActivity) {
+        this.mRobotActivity = mRobotActivity;
+        mImageDirection = (ImageView) mRobotActivity.findViewById(R.id.DirectionsImageView);
+        mTextDirection = (TextView) mRobotActivity.findViewById(R.id.DirectionsTextView);
         mInstance = this;
     }
 
     private UpdateDirections() {}
 
-    static public synchronized UpdateDirections getInstance(TankActivity mTankActivity) {
+    static public synchronized UpdateDirections getInstance(RobotActivity mRobotActivity) {
         if (mInstance == null) {
-            mInstance = new UpdateDirections(mTankActivity);
+            mInstance = new UpdateDirections(mRobotActivity);
         }
         return mInstance;
     }
@@ -45,7 +45,7 @@ public class UpdateDirections implements Runnable {
         if (mEnabled) {
             mText = "Turn Left";
             mImage = R.drawable.left;
-            mTankActivity.runOnUiThread(this);
+            mRobotActivity.runOnUiThread(this);
         }
     }
 
@@ -53,7 +53,7 @@ public class UpdateDirections implements Runnable {
         if (mEnabled) {
             mText = "Turn Right";
             mImage = R.drawable.right;
-            mTankActivity.runOnUiThread(this);
+            mRobotActivity.runOnUiThread(this);
         }
     }
 
@@ -61,7 +61,7 @@ public class UpdateDirections implements Runnable {
         if (mEnabled) {
             mText = "Target in sight, aimed!";
             mImage = R.drawable.aimed;
-            mTankActivity.runOnUiThread(this);
+            mRobotActivity.runOnUiThread(this);
         }
     }
 
@@ -69,43 +69,43 @@ public class UpdateDirections implements Runnable {
         if (mEnabled) {
             mText = "Searching...";
             mImage = R.drawable.searching;
-            mTankActivity.runOnUiThread(this);
+            mRobotActivity.runOnUiThread(this);
         }
     }
 
     public void found() {
         lock();
         mImage = R.drawable.found;
-        mTankActivity.runOnUiThread(this);
+        mRobotActivity.runOnUiThread(this);
     }
 
     public void show() {
         mIsVisible = View.VISIBLE;
-        mTankActivity.runOnUiThread(this);
+        mRobotActivity.runOnUiThread(this);
     }
 
     public void hide() {
         mIsVisible = View.INVISIBLE;
-        mTankActivity.runOnUiThread(this);
+        mRobotActivity.runOnUiThread(this);
     }
 
     public void chooseColor() {
         mText = "Pick a color on the camera stream";
         mImage = R.drawable.tavolozza;
-        mTankActivity.runOnUiThread(this);
+        mRobotActivity.runOnUiThread(this);
     }
 
     public void avoidingLeft() {
         mText = "Avoiding obstacle to the left";
         mImage = R.drawable.avoid_left;
-        mTankActivity.runOnUiThread(this);
+        mRobotActivity.runOnUiThread(this);
     }
 
     public void avoidingRight() {
 
         mText = "Avoiding obstacle to the right";
         mImage = R.drawable.avoid_right;
-        mTankActivity.runOnUiThread(this);
+        mRobotActivity.runOnUiThread(this);
     }
 
     public void lock() {

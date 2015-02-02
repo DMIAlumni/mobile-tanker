@@ -26,8 +26,8 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 
-public class TankActivity extends Activity implements CvCameraViewListener, View.OnTouchListener {
-    private final String TAG = "TankActivity";
+public class RobotActivity extends Activity implements CvCameraViewListener, View.OnTouchListener {
+    private final String TAG = "RobotActivity";
     public static boolean DEBUG = false;
     private CameraBridgeViewBase mOpenCvCameraView;
     public Communicator mCommunicator;
@@ -47,7 +47,7 @@ public class TankActivity extends Activity implements CvCameraViewListener, View
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                     initializeOpenCV();
-                    mOpenCvCameraView.setOnTouchListener(TankActivity.this);
+                    mOpenCvCameraView.setOnTouchListener(RobotActivity.this);
                     break;
                 default:
                     super.onManagerConnected(status);

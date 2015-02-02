@@ -1,12 +1,9 @@
 package me.mariotti.tanker.messaging;
 
 import android.text.TextUtils;
-import android.util.Log;
-import me.mariotti.tanker.TankActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
 public class MessageEncoderDecoder {
     private final static String TAG = "MessageEncoderDecoder";
