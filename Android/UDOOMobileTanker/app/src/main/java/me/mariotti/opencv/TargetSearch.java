@@ -5,7 +5,7 @@ import android.util.Log;
 import android.widget.ImageView;
 import me.mariotti.tanker.R;
 import me.mariotti.tanker.RobotActivity;
-import me.mariotti.tanker.TankLogic;
+import me.mariotti.tanker.RobotLogic;
 import me.mariotti.tanker.UpdateDirections;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -17,7 +17,7 @@ import java.util.List;
 public class TargetSearch {
     private final String TAG = "TargetSearch";
     private RobotActivity mRobotActivity;
-    private TankLogic mTankLogic;
+    private RobotLogic mRobotLogic;
     private Mat mGrayscaleImage;
     private Rect mTarget;
     private Scalar mTargetColorRgba = new Scalar(0,0,0,0);
@@ -31,7 +31,7 @@ public class TargetSearch {
 
     public TargetSearch(RobotActivity mRobotActivity) {
         this.mRobotActivity = mRobotActivity;
-        mTankLogic = mRobotActivity.mTankLogic;
+        mRobotLogic = mRobotActivity.mRobotLogic;
         ImageView mImageDirection = (ImageView) mRobotActivity.findViewById(R.id.DirectionsImageView);
         mImageDirection.setImageResource(R.drawable.tavolozza);
         mNullTarget = new Rect(0, 0, 0, 0);
@@ -82,28 +82,28 @@ public class TargetSearch {
         if (mTarget != mNullTarget) {
             mDirectionsUpdater.show();
             //if after a resume the tank logic instance has changed update it
-            mTankLogic = mTankLogic != mRobotActivity.mTankLogic ? mRobotActivity.mTankLogic : mTankLogic;
+            mRobotLogic = mRobotLogic != mRobotActivity.mRobotLogic ? mRobotActivity.mRobotLogic : mRobotLogic;
 
-            mTankLogic.frameWidth(mRgba.width());
-            mTankLogic.frameHeight(mRgba.height());
-            mTankLogic.targetWidth(mTarget.width);
-            mTankLogic.targetHeight(mTarget.height);
-            mTankLogic.targetCenter(new Point(mTarget.x + mTarget.width / 2, mTarget.y + mTarget.height / 2));
+            mRobotLogic.frameWidth(mRgba.width());
+            mRobotLogic.frameHeight(mRgba.height());
+            mRobotLogic.targetWidth(mTarget.width);
+            mRobotLogic.targetHeight(mTarget.height);
+            mRobotLogic.targetCenter(new Point(mTarget.x + mTarget.width / 2, mTarget.y + mTarget.height / 2));
 
 
             if (mFrameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
-                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_LEFT);
+                mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_LEFT);
                 mDirectionsUpdater.left();
 
             } else if (mFrameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
-                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_RIGHT);
+                mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_RIGHT);
                 mDirectionsUpdater.right();
             } else {
-                mTankLogic.targetPosition(TankLogic.TARGET_POSITION_FRONT);
+                mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_FRONT);
                mDirectionsUpdater.aimed();
             }
         } else {
-            mTankLogic.targetPosition(TankLogic.TARGET_POSITION_NONE);
+            mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_NONE);
             mDirectionsUpdater.show();
             mDirectionsUpdater.search();
         }

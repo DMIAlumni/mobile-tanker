@@ -10,14 +10,14 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
 
-public class TankLogic implements Observer {
+public class RobotLogic implements Observer {
     public final static int TARGET_POSITION_FRONT = 3;
     public final static int TARGET_POSITION_LEFT = 1;
     public final static int TARGET_POSITION_RIGHT = 2;
     public final static int TARGET_POSITION_NONE = 0;
     public final static int LEFT = 0;
     public final static int RIGHT = 1;
-    private final String TAG = "TankLogic";
+    private final String TAG = "RobotLogic";
     private Communicator mCommunicator;
     private RobotActivity mRobotActivity;
     private Boolean mTargetInSight = false;
@@ -41,7 +41,7 @@ public class TankLogic implements Observer {
     private long mStartCheerTime = -1;
 
 
-    public TankLogic(Communicator mCommunicator, RobotActivity robotActivity) {
+    public RobotLogic(Communicator mCommunicator, RobotActivity robotActivity) {
         this.mCommunicator = mCommunicator;
         mRobotActivity = robotActivity;
         mCommunicator.mIncomingMessageObservable.addObserver(this);

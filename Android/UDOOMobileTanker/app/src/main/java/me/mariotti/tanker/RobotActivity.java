@@ -33,7 +33,7 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
     public Communicator mCommunicator;
     public AdkManager mArduino;
     private TargetSearch mTargetSearch;
-    public TankLogic mTankLogic;
+    public RobotLogic mRobotLogic;
     private boolean mIsColorChosen = false;
     private SeekBar mHue, mSaturation, mValue;
     private Mat mInputFrame;
@@ -175,7 +175,7 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
             mCommunicator.setKeepAlive(false);
         }
         mCommunicator = new Communicator(this);
-        mTankLogic = new TankLogic(mCommunicator, this);
+        mRobotLogic = new RobotLogic(mCommunicator, this);
     }
 
 
