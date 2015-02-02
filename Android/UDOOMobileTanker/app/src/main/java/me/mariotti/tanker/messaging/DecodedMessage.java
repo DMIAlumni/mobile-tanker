@@ -3,71 +3,72 @@ package me.mariotti.tanker.messaging;
 
 import java.util.ArrayList;
 
-//Message pattern: msgType,msg,data
+//Message pattern: mMsgType,mMsg,mData
 public class DecodedMessage {
-    private int msgType;
-    public int msg;
-    private int data;
-    private int error;
+    private int mMsgType;
+    public int mMsg;
+    private int mData;
+    private int mError;
 
-    public DecodedMessage(int msgType, int msg, int data, int error) {
-        this.msgType = msgType;
-        this.msg = msg;
-        this.data = data;
-        this.error = error;
+    public DecodedMessage(int msgType, int msg, int mData, int mError) {
+        this.mMsgType = msgType;
+        this.mMsg = msg;
+        this.mData = mData;
+        this.mError = mError;
     }
 
     public DecodedMessage(ArrayList<String> splittedMessage) {
-        this.msgType=Integer.valueOf(splittedMessage.get(0));
-        this.msg=Integer.valueOf(splittedMessage.get(1));
-        this.data=Integer.valueOf(splittedMessage.get(2));
-        this.error=0;
+        this.mMsgType = Integer.valueOf(splittedMessage.get(0));
+        this.mMsg = Integer.valueOf(splittedMessage.get(1));
+        this.mData = Integer.valueOf(splittedMessage.get(2));
+        this.mError = 0;
     }
 
     private int getMsgType() {
-        return msgType;
+        return mMsgType;
     }
 
     private int getMsg() {
-        return msg;
+        return mMsg;
     }
 
     public int getData() {
-        return data;
+        return mData;
     }
 
-    public int getError() {
-        return error;
+    public int getmError() {
+        return mError;
     }
 
     public boolean isInfoMessage() {
-        return msgType == MessageEncoderDecoder.INFO;
+        return mMsgType == MessageEncoderDecoder.INFO;
     }
 
     public boolean isStateMessage() {
-        return msgType == MessageEncoderDecoder.STATE;
+        return mMsgType == MessageEncoderDecoder.STATE;
     }
 
     public boolean isTerminateCommand() {
-        return msgType == MessageEncoderDecoder.INFO && msg==MessageEncoderDecoder.TERMINATE;
+        return mMsgType == MessageEncoderDecoder.INFO && mMsg == MessageEncoderDecoder.TERMINATE;
     }
 
     public boolean hasDistance() {
-        return msg == MessageEncoderDecoder.DISTANCE;
+        return mMsg == MessageEncoderDecoder.DISTANCE;
     }
 
     public boolean EmergencyMode() {
-        return msg == MessageEncoderDecoder.EMERGENCY;
+        return mMsg == MessageEncoderDecoder.EMERGENCY;
     }
 
     public boolean SearchingMode() {
-        return msg == MessageEncoderDecoder.SEARCHING;
+        return mMsg == MessageEncoderDecoder.SEARCHING;
     }
 
     public boolean HuntingMode() {
-        return msg == MessageEncoderDecoder.HUNTING;
+        return mMsg == MessageEncoderDecoder.HUNTING;
     }
-    public boolean hasError(){
-        return error!=0;
+
+    public boolean hasError() {
+        return mError != 0;
     }
 }
