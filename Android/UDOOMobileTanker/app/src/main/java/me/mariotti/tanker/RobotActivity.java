@@ -15,7 +15,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 import me.mariotti.opencv.ColorBlobDetector;
 import me.mariotti.opencv.TargetSearch;
-import me.mariotti.tanker.messaging.Communicator;
+import me.mariotti.messaging.Communicator;
 import me.palazzetti.adktoolkit.AdkManager;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;

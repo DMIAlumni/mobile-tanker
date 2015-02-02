@@ -1,9 +1,9 @@
 package me.mariotti.tanker;
 
 import android.util.Log;
-import me.mariotti.tanker.messaging.Communicator;
-import me.mariotti.tanker.messaging.DecodedMessage;
-import me.mariotti.tanker.messaging.MessageEncoderDecoder;
+import me.mariotti.messaging.Communicator;
+import me.mariotti.messaging.DecodedMessage;
+import me.mariotti.messaging.MessageEncoderDecoder;
 import org.opencv.core.Point;
 
 import java.util.Observable;
@@ -89,16 +89,6 @@ public class RobotLogic implements Observer {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
                     UpdateDirections.getInstance(mRobotActivity).chooseColor();
                 }
-                return;
-            }
-            // Stop robot with an object within 5cm
-            if (mDistance != 0 && mDistance < 5) {
-                stopAvoidingPhase();
-                Log.i(TAG, "Object at " + mDistance + "cm. Stopped.");
-                mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-                mIsMovingForward = false;
-                mLastTargetCenter = null;
-                mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
                 return;
             }
 
