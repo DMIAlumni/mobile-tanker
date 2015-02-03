@@ -117,7 +117,7 @@ uint32_t bytesRead = 0;
 int blinkGreenTimer, blinkYellowTimer;
 bool stateYellow,stateGreen;
 bool emergency_mode,warning,FL_edge,FR_edge;
-int emergency_sensor_threshold =850,currentState=IDLE;
+int emergency_sensor_threshold =800,currentState=IDLE;
 
 
 
@@ -232,6 +232,8 @@ void loop() {
         digitalWrite(LED_YELLOW, stateYellow);   
       }
       Serial.print("*");
+      //Safety command. Stop the robot if Android app is gone
+      stop(false);
     }
     getDistance();
   }
