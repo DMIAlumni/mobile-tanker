@@ -22,8 +22,6 @@ public class UpdateDirections implements Runnable {
         mInstance = this;
     }
 
-    private UpdateDirections() {}
-
     static public synchronized UpdateDirections getInstance(RobotActivity mRobotActivity) {
         if (mInstance == null) {
             mInstance = new UpdateDirections(mRobotActivity);
