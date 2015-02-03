@@ -1,9 +1,9 @@
 package me.mariotti.tanker;
 
 import android.util.Log;
-import me.mariotti.tanker.messaging.Communicator;
-import me.mariotti.tanker.messaging.DecodedMessage;
-import me.mariotti.tanker.messaging.MessageEncoderDecoder;
+import me.mariotti.messaging.Communicator;
+import me.mariotti.messaging.DecodedMessage;
+import me.mariotti.messaging.MessageEncoderDecoder;
 import org.opencv.core.Point;
 
 import java.util.Observable;
@@ -37,7 +37,7 @@ public class RobotLogic implements Observer {
     private long mCurrentPhaseTime = -1;
     private int mDefaultlPhaseTimeSet = 500;
     private boolean mTargetFound = false;
-    private boolean mCheer = false;
+    private boolean mCheerPhase = false;
     private long mStartCheerTime = -1;
 
 
@@ -72,7 +72,7 @@ public class RobotLogic implements Observer {
 
     private void think() {
         if (mRobotActivity.canGo()) {
-            if (mCheer) {
+            if (mCheerPhase) {
                 if (mStartCheerTime == -1) {
                     mStartCheerTime = System.currentTimeMillis();
                     Log.i(TAG, "Target at " + mDistance + "cm. CHEER.");
@@ -81,7 +81,7 @@ public class RobotLogic implements Observer {
                 mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 50, MessageEncoderDecoder.TURN_ON_SPOT));
                 int mCheerLength = 3000;
                 if (mStartCheerTime + mCheerLength < System.currentTimeMillis()) {
-                    mCheer = false;
+                    mCheerPhase = false;
                     mTargetFound = false;
                     mStartCheerTime = -1;
                     mRobotActivity.reset();
@@ -89,16 +89,6 @@ public class RobotLogic implements Observer {
                     mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
                     UpdateDirections.getInstance(mRobotActivity).chooseColor();
                 }
-                return;
-            }
-            // Stop robot with an object within 5cm
-            if (mDistance != 0 && mDistance < 5) {
-                stopAvoidingPhase();
-                Log.i(TAG, "Object at " + mDistance + "cm. Stopped.");
-                mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
-                mIsMovingForward = false;
-                mLastTargetCenter = null;
-                mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
                 return;
             }
 
@@ -145,11 +135,12 @@ public class RobotLogic implements Observer {
                     case 4:
                 }
             } else {
+                //Search Phase
                 UpdateDirections.getInstance(mRobotActivity).unlock();
                 //Target Found
                 if (mDistance != 0 && mDistance < 30 && mTargetInSight) {
                     if (mTargetFound) {
-                        mCheer = true;
+                        mCheerPhase = true;
                         mIsMovingForward = false;
                         mLastTargetCenter = null;
                         mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
@@ -264,8 +255,9 @@ public class RobotLogic implements Observer {
             if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()) {
                 mDistance = incomingMessage.getData();
             }
+            //For future use only. Gives to Arduino the ability to close this app.
             if (incomingMessage.isTerminateCommand()) {
-                mRobotActivity.finish(); //TODO da eliminare, ho tolto il pulsante su Arduino. Controllare e eliminare
+                mRobotActivity.finish();
             }
         }
     }

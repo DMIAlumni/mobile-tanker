@@ -1,4 +1,4 @@
-package me.mariotti.tanker.messaging;
+package me.mariotti.messaging;
 
 
 import java.util.ArrayList;
