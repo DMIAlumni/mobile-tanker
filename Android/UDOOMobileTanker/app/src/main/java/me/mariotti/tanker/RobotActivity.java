@@ -132,6 +132,13 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mArduino.close();
+
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
         final ScrollView mScrollLog = (ScrollView) findViewById(R.id.scrollView);
