@@ -9,7 +9,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -71,7 +70,7 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
         mTextCurrentValue = (TextView) findViewById(R.id.text_currentValue);
         mButtonGo = (ToggleButton) findViewById(R.id.goButton);
 
-        mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
+        mArduino = new AdkManager(this);
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
