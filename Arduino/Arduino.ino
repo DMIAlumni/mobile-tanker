@@ -126,8 +126,8 @@ FL_edge,
 FR_edge;
 
 void setup() {
-  pinMode(BRAKE_LEFT, OUTPUT);  // Brake pin on channel A
-  pinMode(DIR_LEFT, OUTPUT);    // Direction pin on channel A
+  pinMode(BRAKE_LEFT, OUTPUT);   // Brake pin on channel A
+  pinMode(DIR_LEFT, OUTPUT);     // Direction pin on channel A
   pinMode(BRAKE_RIGHT, OUTPUT);  // Brake pin on channel B
   pinMode(DIR_RIGHT, OUTPUT);    // Direction pin on channel B
   pinMode(LED_GREEN, OUTPUT);
