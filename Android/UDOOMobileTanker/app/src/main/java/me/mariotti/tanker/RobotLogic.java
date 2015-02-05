@@ -1,76 +1,57 @@
 package me.mariotti.tanker;
 
 import android.util.Log;
+import me.mariotti.ai.BaseAi;
 import me.mariotti.messaging.Communicator;
-import me.mariotti.messaging.DecodedMessage;
-import me.mariotti.messaging.MessageEncoderDecoder;
+import me.mariotti.messaging.ArduinoMessage;
+import me.mariotti.messaging.IncomingMessage;
+import me.mariotti.messaging.MessageEncoder;
 import org.opencv.core.Point;
 
 import java.util.Observable;
-import java.util.Observer;
 import java.util.Random;
 
-public class RobotLogic implements Observer {
-    public final static int TARGET_POSITION_FRONT = 3;
-    public final static int TARGET_POSITION_LEFT = 1;
-    public final static int TARGET_POSITION_RIGHT = 2;
-    public final static int TARGET_POSITION_NONE = 0;
-    public final static int LEFT = 0;
-    public final static int RIGHT = 1;
+public class RobotLogic extends BaseAi {
     private final String TAG = "RobotLogic";
     private Communicator mCommunicator;
     private RobotActivity mRobotActivity;
-    private Boolean mTargetInSight = false;
-    private int mTargetDirection;
-    private Point mTargetCenter;
     private Point mLastTargetCenter;
-    private int mTargetWidth;
-    private int mTargetHeight;
-    private int frameHeight;
-    private int mFrameWidth;
-    private int mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+    private int mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
     private boolean mIsMovingForward;
     private int mDistance = Integer.MAX_VALUE;
     private boolean mIsAvoidingAnObstacle = false;
     private int mAvoidingDirection;
     private int mAvoidingPhase = -1;
     private long mCurrentPhaseTime = -1;
-    private int mDefaultlPhaseTimeSet = 500;
+    private int mDefaultPhaseTimeSet = 500;
     private boolean mTargetFound = false;
     private boolean mCheerPhase = false;
     private long mStartCheerTime = -1;
 
 
-    public RobotLogic(Communicator mCommunicator, RobotActivity robotActivity) {
-        this.mCommunicator = mCommunicator;
+    public RobotLogic(Communicator communicator, RobotActivity robotActivity) {
+        IncomingMessage.getInstance().addObserver(this);
+
+        mCommunicator = communicator;
         mRobotActivity = robotActivity;
-        mCommunicator.mIncomingMessageObservable.addObserver(this);
     }
 
     @Override
     public void update(Observable observable, Object data) {
-        decodeMessage();
+        ArduinoMessage incomingMessage = IncomingMessage.getInstance().getIncoming();
+
+        if (!incomingMessage.hasError()) {
+            if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()) {
+                mDistance = incomingMessage.getData();
+            }
+            // for future use only. Gives to Arduino the ability to close this app.
+            if (incomingMessage.isTerminateCommand()) {
+                mRobotActivity.finish();
+            }
+        }
     }
 
-    public void targetPosition(int mPosition) {
-        mTargetInSight = mPosition != TARGET_POSITION_NONE;
-        mTargetDirection = mPosition;
-        think();
-    }
-
-    public void targetCenter(Point mPoint) {
-        mTargetCenter = mPoint;
-    }
-
-    public void targetWidth(int mWidth) {
-        mTargetWidth = mWidth;
-    }
-
-    public void targetHeight(int mHeight) {
-        mTargetHeight = mHeight;
-    }
-
-    private void think() {
+    public void think() {
         if (mRobotActivity.canGo()) {
             if (mCheerPhase) {
                 if (mStartCheerTime == -1) {
@@ -78,7 +59,7 @@ public class RobotLogic implements Observer {
                     Log.i(TAG, "Target at " + mDistance + "cm. CHEER.");
                     UpdateDirections.getInstance(mRobotActivity).found();
                 }
-                mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 50, MessageEncoderDecoder.TURN_ON_SPOT));
+                mCommunicator.setOutgoing(MessageEncoder.turnRight(MessageEncoder.DEFAULT_VELOCITY + 50, MessageEncoder.TURN_ON_SPOT));
                 int mCheerLength = 3000;
                 if (mStartCheerTime + mCheerLength < System.currentTimeMillis()) {
                     mCheerPhase = false;
@@ -86,7 +67,7 @@ public class RobotLogic implements Observer {
                     mStartCheerTime = -1;
                     mRobotActivity.reset();
                     Log.i(TAG, "Stop searching. Choose a new color to find");
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+                    mCommunicator.setOutgoing(MessageEncoder.stop());
                     UpdateDirections.getInstance(mRobotActivity).chooseColor();
                 }
                 return;
@@ -101,7 +82,7 @@ public class RobotLogic implements Observer {
                 //While arounding the obstacle he see the target
                 if (mTargetInSight) {
                     Log.i(TAG, "Target seen while arounding the obstacle");
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+                    mCommunicator.setOutgoing(MessageEncoder.stop());
                     stopAvoidingPhase();
                     return;
                 }
@@ -114,23 +95,23 @@ public class RobotLogic implements Observer {
                             mCurrentPhaseTime = System.currentTimeMillis();
                         }
                         if (mAvoidingDirection == LEFT) {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 30, MessageEncoderDecoder.TURN_ON_SPOT));
+                            mCommunicator.setOutgoing(MessageEncoder.turnLeft(MessageEncoder.DEFAULT_VELOCITY + 30, MessageEncoder.TURN_ON_SPOT));
                         } else {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 25, MessageEncoderDecoder.TURN_ON_SPOT));
+                            mCommunicator.setOutgoing(MessageEncoder.turnRight(MessageEncoder.DEFAULT_VELOCITY + 25, MessageEncoder.TURN_ON_SPOT));
                         }
-                        checkPhaseTimeElapsed(mDefaultlPhaseTimeSet);
+                        checkPhaseTimeElapsed(mDefaultPhaseTimeSet);
                         break;
                     case 2:
-                        mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY));
-                        checkPhaseTimeElapsed(mDefaultlPhaseTimeSet * 2);
+                        mCommunicator.setOutgoing(MessageEncoder.moveForward(MessageEncoder.DEFAULT_VELOCITY, MessageEncoder.DEFAULT_VELOCITY));
+                        checkPhaseTimeElapsed(mDefaultPhaseTimeSet * 2);
                         break;
                     case 3:
                         if (mAvoidingDirection == LEFT) {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(MessageEncoderDecoder.DEFAULT_VELOCITY + 25, MessageEncoderDecoder.TURN_ON_SPOT));
+                            mCommunicator.setOutgoing(MessageEncoder.turnRight(MessageEncoder.DEFAULT_VELOCITY + 25, MessageEncoder.TURN_ON_SPOT));
                         } else {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(MessageEncoderDecoder.DEFAULT_VELOCITY + 30, MessageEncoderDecoder.TURN_ON_SPOT));
+                            mCommunicator.setOutgoing(MessageEncoder.turnLeft(MessageEncoder.DEFAULT_VELOCITY + 30, MessageEncoder.TURN_ON_SPOT));
                         }
-                        checkPhaseTimeElapsed(mDefaultlPhaseTimeSet);
+                        checkPhaseTimeElapsed(mDefaultPhaseTimeSet);
                         break;
                     case 4:
                 }
@@ -143,7 +124,7 @@ public class RobotLogic implements Observer {
                         mCheerPhase = true;
                         mIsMovingForward = false;
                         mLastTargetCenter = null;
-                        mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                        mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
                         return;
                     } else {
                         mTargetFound = true;
@@ -154,19 +135,19 @@ public class RobotLogic implements Observer {
                 if (mDistance != 0 && mDistance < 30 && !mTargetInSight) {
                     UpdateDirections.getInstance(mRobotActivity).lock();
                     Log.i(TAG, "Obstacle at " + mDistance + "cm. Starting arounding orocess.");
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+                    mCommunicator.setOutgoing(MessageEncoder.stop());
                     mIsMovingForward = false;
                     mLastTargetCenter = null;
-                    mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                    mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
                     startAvoidingPhase(true);
                     return;
                 }
                 if (!mTargetInSight) {
                     Log.i(TAG, "None Object at in sight. Searching.");
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.search());
+                    mCommunicator.setOutgoing(MessageEncoder.search());
                     mIsMovingForward = false;
                     mLastTargetCenter = null;
-                    mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                    mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
                     return;
                 }
                 //if target is thinner than 100px consider it 100px width
@@ -180,44 +161,47 @@ public class RobotLogic implements Observer {
                         int mVelocityStep = 1;
                         mTurnVelocity += mVelocityStep;
                         if (mTurnVelocity > 255 - mVelocityStep)
-                            mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+                            mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
                         //TODO send rover in emergency mode cause it's stuck
                     }
                     //target not aimed
                     if (mTargetDirection == TARGET_POSITION_LEFT) {
                         if (mIsMovingForward) {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY + 20));
+                            mCommunicator.setOutgoing(MessageEncoder.moveForward(MessageEncoder.DEFAULT_VELOCITY, MessageEncoder.DEFAULT_VELOCITY + 20));
                         } else {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.turnLeft(mTurnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
+                            mCommunicator.setOutgoing(MessageEncoder.turnLeft(mTurnVelocity, MessageEncoder.TURN_NORMALLY));
                             mIsMovingForward = false;
                         }
                     }
                     if (mTargetDirection == TARGET_POSITION_RIGHT) {
                         if (mIsMovingForward) {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY + 20, MessageEncoderDecoder.DEFAULT_VELOCITY));
+                            mCommunicator.setOutgoing(MessageEncoder.moveForward(MessageEncoder.DEFAULT_VELOCITY + 20, MessageEncoder.DEFAULT_VELOCITY));
                         } else {
-                            mCommunicator.setOutgoing(MessageEncoderDecoder.turnRight(mTurnVelocity, MessageEncoderDecoder.TURN_NORMALLY));
+                            mCommunicator.setOutgoing(MessageEncoder.turnRight(mTurnVelocity, MessageEncoder.TURN_NORMALLY));
                             mIsMovingForward = false;
                         }
                     }
                 } else {// Target aimed
-                    mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
-                    mCommunicator.setOutgoing(MessageEncoderDecoder.moveForward(MessageEncoderDecoder.DEFAULT_VELOCITY, MessageEncoderDecoder.DEFAULT_VELOCITY));
+                    mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
+                    mCommunicator.setOutgoing(MessageEncoder.moveForward(MessageEncoder.DEFAULT_VELOCITY, MessageEncoder.DEFAULT_VELOCITY));
                     mIsMovingForward = true;
                 }
                 mLastTargetCenter = mTargetCenter;
             }
         } else {
-            mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+            mCommunicator.setOutgoing(MessageEncoder.stop());
             stopAvoidingPhase();
             mIsMovingForward = false;
             mLastTargetCenter = null;
-            mTurnVelocity = MessageEncoderDecoder.DEFAULT_VELOCITY;
+            mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
         }
     }
 
+    // Internals
+    // ---------
+
     private void startAvoidingPhase(boolean newDirection) {
-        mCommunicator.setOutgoing(MessageEncoderDecoder.stop());
+        mCommunicator.setOutgoing(MessageEncoder.stop());
         mIsAvoidingAnObstacle = true;
         mAvoidingPhase = 1;
         if (newDirection) {
@@ -235,7 +219,7 @@ public class RobotLogic implements Observer {
         if (System.currentTimeMillis() > mCurrentPhaseTime + phaseTimeSet) {
             //se c'è ancora un ostacolo a meno di 30 centimetri aumenta la durata della fase corrente (tranne che in fase 2)
             if (mDistance != 0 && mDistance < 30 && mAvoidingPhase != 2) {
-                mCurrentPhaseTime += mDefaultlPhaseTimeSet / 5;
+                mCurrentPhaseTime += mDefaultPhaseTimeSet / 5;
             } else {
                 mCurrentPhaseTime = System.currentTimeMillis();
                 if (++mAvoidingPhase > 3) {
@@ -249,25 +233,7 @@ public class RobotLogic implements Observer {
         return mLastTargetCenter != null && Math.abs(mTargetCenter.x - mLastTargetCenter.x) < 10;
     }
 
-    private void decodeMessage() {
-        DecodedMessage incomingMessage = MessageEncoderDecoder.decodeIncomingMessage(mCommunicator.getIncoming());
-        if (!incomingMessage.hasError()) {
-            if (incomingMessage.isInfoMessage() && incomingMessage.hasDistance()) {
-                mDistance = incomingMessage.getData();
-            }
-            //For future use only. Gives to Arduino the ability to close this app.
-            if (incomingMessage.isTerminateCommand()) {
-                mRobotActivity.finish();
-            }
-        }
-    }
-
     public void frameWidth(int width) {
         mFrameWidth = width;
     }
-
-    public void frameHeight(int height) {
-        frameHeight = height;
-    }
 }
-

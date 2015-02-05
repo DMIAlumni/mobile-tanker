@@ -28,12 +28,14 @@ import org.opencv.imgproc.Imgproc;
 
 public class RobotActivity extends Activity implements CvCameraViewListener, View.OnTouchListener {
     private final String TAG = "RobotActivity";
-    public static boolean DEBUG = false;
+    public final static boolean DEBUG = false;
+
     private CameraBridgeViewBase mOpenCvCameraView;
-    public Communicator mCommunicator;
-    public AdkManager mArduino;
+    private Communicator mCommunicator;
+    private AdkManager mArduino;
     private TargetSearch mTargetSearch;
-    public RobotLogic mRobotLogic;
+    private RobotLogic mRobotLogic;
+
     private boolean mIsColorChosen = false;
     private SeekBar mHue, mSaturation, mValue;
     private Mat mInputFrame;
@@ -68,12 +70,12 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
         mTextCurrentSaturation = (TextView) findViewById(R.id.text_currentSaturation);
         mTextCurrentValue = (TextView) findViewById(R.id.text_currentValue);
         mButtonGo = (ToggleButton) findViewById(R.id.goButton);
+
         mArduino = new AdkManager((UsbManager) getSystemService(Context.USB_SERVICE));
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.CameraPreview);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.getHolder().setFixedSize(320, 240);
-        mTargetSearch = new TargetSearch(this);
 
         SeekBar.OnSeekBarChangeListener seekBarListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -106,6 +108,9 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
         mHue.setOnSeekBarChangeListener(seekBarListener);
         mSaturation.setOnSeekBarChangeListener(seekBarListener);
         mValue.setOnSeekBarChangeListener(seekBarListener);
+
+        UpdateDirections.getInstance(this).chooseColor();
+        UpdateDirections.getInstance(this).show();
     }
 
     @Override
@@ -115,11 +120,12 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
 
     @Override
     public void onCameraViewStopped() {
+        // noop
     }
 
     @Override
     public Mat onCameraFrame(Mat aInputFrame) {
-        //flip horizontally and vertically due to camera physical position
+        // flip horizontally and vertically due to camera physical position
         Core.flip(aInputFrame, aInputFrame, -1);
         mInputFrame = aInputFrame;
         return mIsColorChosen ? mTargetSearch.searchColours(aInputFrame) : aInputFrame;
@@ -128,25 +134,13 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
     @Override
     protected void onPause() {
         super.onPause();
-        mCommunicator.setKeepAlive(false);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mCommunicator.stop();
         mArduino.close();
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        final ScrollView mScrollLog = (ScrollView) findViewById(R.id.scrollView);
-        mScrollLog.post(new Runnable() {
-            public void run() {
-                mScrollLog.scrollTo(0, mScrollLog.getBottom());
-            }
-        });
     }
 
     @Override
@@ -154,16 +148,13 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
         restoreTargetAnalysisAndCommunication();
-        if (!mIsColorChosen) {
-            //listen(VOICE_COLOR); TODO Uncomment
-        }
     }
 
     public boolean canGo() {
         return mGo;
     }
 
-    public void reset(){
+    public void reset() {
         mIsColorChosen =false;
         mGo = false;
         runOnUiThread(new Runnable() {
@@ -176,19 +167,10 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
 
     void restoreTargetAnalysisAndCommunication() {
         mArduino.open();
-        //let communicator's AsyncTask ends and clear the reference to it. !=null check is for avoid NullPointException on
-        //first run
-        if (mCommunicator != null) {
-            mCommunicator.setKeepAlive(false);
-        }
-        mCommunicator = new Communicator(this);
+        mCommunicator = new Communicator(mArduino);
+        mCommunicator.start();
         mRobotLogic = new RobotLogic(mCommunicator, this);
-    }
-
-
-
-    public void toggleDebug(View w) {
-        DEBUG = !DEBUG;
+        mTargetSearch = new TargetSearch(mRobotLogic, this);
     }
 
     public void toggleGo(View w) {
@@ -198,7 +180,6 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
     private void initializeOpenCV() {
         mOpenCvCameraView.enableView();
     }
-
 
     public boolean onTouch(View v, MotionEvent event) {
         Mat mTouchedRegionHsv = new Mat();
