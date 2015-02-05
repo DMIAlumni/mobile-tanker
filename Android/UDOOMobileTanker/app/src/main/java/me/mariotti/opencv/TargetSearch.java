@@ -2,10 +2,8 @@ package me.mariotti.opencv;
 
 
 import android.util.Log;
-import android.widget.ImageView;
-import me.mariotti.tanker.R;
+import me.mariotti.ai.BaseAi;
 import me.mariotti.tanker.RobotActivity;
-import me.mariotti.tanker.RobotLogic;
 import me.mariotti.tanker.UpdateDirections;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -17,7 +15,7 @@ import java.util.List;
 public class TargetSearch {
     private final String TAG = "TargetSearch";
     private RobotActivity mRobotActivity;
-    private RobotLogic mRobotLogic;
+    private BaseAi mRobotLogic;
     private Mat mGrayscaleImage;
     private Rect mTarget;
     private Scalar mTargetColorRgba = new Scalar(0,0,0,0);
@@ -25,15 +23,12 @@ public class TargetSearch {
     private static final Scalar RED = new Scalar(255, 0, 0);
     private static final Scalar GREEN = new Scalar(0, 255, 0);
     private static final Scalar BLUE = new Scalar(0, 0, 255);
-    private UpdateDirections mDirectionsUpdater = null;
     private Rect mNullTarget;
 
 
-    public TargetSearch(RobotActivity mRobotActivity) {
+    public TargetSearch(BaseAi robotLogic, RobotActivity mRobotActivity) {
         this.mRobotActivity = mRobotActivity;
-        mRobotLogic = mRobotActivity.mRobotLogic;
-        ImageView mImageDirection = (ImageView) mRobotActivity.findViewById(R.id.DirectionsImageView);
-        mImageDirection.setImageResource(R.drawable.tavolozza);
+        mRobotLogic = robotLogic;
         mNullTarget = new Rect(0, 0, 0, 0);
     }
 
@@ -77,39 +72,27 @@ public class TargetSearch {
         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
         Mat mSpectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 38, 38 + mSpectrum.cols());
         mSpectrum.copyTo(mSpectrumLabel);
-        mDirectionsUpdater = UpdateDirections.getInstance(mRobotActivity);
+        UpdateDirections directionsUpdater = UpdateDirections.getInstance(mRobotActivity);
 
         if (mTarget != mNullTarget) {
-            mDirectionsUpdater.show();
-            //if after a resume the tank logic instance has changed update it
-            mRobotLogic = mRobotLogic != mRobotActivity.mRobotLogic ? mRobotActivity.mRobotLogic : mRobotLogic;
-
-            mRobotLogic.frameWidth(mRgba.width());
-            mRobotLogic.frameHeight(mRgba.height());
-            mRobotLogic.targetWidth(mTarget.width);
-            mRobotLogic.targetHeight(mTarget.height);
-            mRobotLogic.targetCenter(new Point(mTarget.x + mTarget.width / 2, mTarget.y + mTarget.height / 2));
-
+            directionsUpdater.show();
 
             if (mFrameCenter.x - (mTarget.x + mTarget.width / 2) > 0) {
-                mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_LEFT);
-                mDirectionsUpdater.left();
+                mRobotLogic.targetPosition(mRgba, mTarget, BaseAi.TARGET_POSITION_LEFT);
+                directionsUpdater.left();
 
             } else if (mFrameCenter.x - (mTarget.x + mTarget.width / 2) < 0) {
-                mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_RIGHT);
-                mDirectionsUpdater.right();
+                mRobotLogic.targetPosition(mRgba, mTarget, BaseAi.TARGET_POSITION_RIGHT);
+                directionsUpdater.right();
             } else {
-                mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_FRONT);
-               mDirectionsUpdater.aimed();
+                mRobotLogic.targetPosition(mRgba, mTarget, BaseAi.TARGET_POSITION_FRONT);
+               directionsUpdater.aimed();
             }
         } else {
-            mRobotLogic.targetPosition(RobotLogic.TARGET_POSITION_NONE);
-            mDirectionsUpdater.show();
-            mDirectionsUpdater.search();
+            mRobotLogic.targetPosition(mRgba, mTarget, BaseAi.TARGET_POSITION_NONE);
+            directionsUpdater.show();
+            directionsUpdater.search();
         }
-
-        //mDirectionsUpdater.setTarget(targetRect);
-        //mRobotActivity.runOnUiThread(mDirectionsUpdater);
 
         return mRgba;
     }
@@ -120,10 +103,6 @@ public class TargetSearch {
 
     public void setGrayscaleImage(Mat mGrayscaleImage) {
         this.mGrayscaleImage = mGrayscaleImage;
-    }
-
-    public UpdateDirections getmDirectionsUpdater() {
-        return mDirectionsUpdater;
     }
 
     public void setTargetHsvColor(int hue, int saturation, int value) {
