@@ -1,96 +1,52 @@
 package me.mariotti.messaging;
 
-import android.os.AsyncTask;
-import android.util.Log;
-import android.widget.TextView;
-import me.mariotti.tanker.R;
-import me.mariotti.tanker.RobotActivity;
+
 import me.palazzetti.adktoolkit.AdkManager;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-
-public class Communicator extends AsyncTask<RobotActivity, String, Void> {
+public class Communicator {
     private final String TAG = "Communicator";
-    private final int DELAY = 50; // equal the delay set on Arduino
-    private TextView mLogTextView;
-    private String mOutgoing = MessageEncoderDecoder.stop(),
-                   mLastSent = "",
-                   mLastReceived = "";
+    private final int READING_POLLING_TIME = 50; // should be equal the delay set on Arduino
+
     private AdkManager mArduino;
-    private boolean mKeepAlive = true;
-    public IncomingMessage mIncomingMessageObservable;
+    private ScheduledExecutorService mScheduler;
+    private String mOutgoing = MessageEncoder.stop();
+    private String mLastReceived = "";
 
-    public Communicator(RobotActivity mActivity) {
-        mArduino = mActivity.mArduino;
-        mLogTextView = (TextView) mActivity.findViewById(R.id.LogTextView);
-        mIncomingMessageObservable = new IncomingMessage();
-        execute();
+    public Communicator(AdkManager adkManager) {
+        this.mArduino = adkManager;
     }
 
-    @Override
-    protected void onProgressUpdate(String... values) {
-        super.onProgressUpdate(values);
-        if (RobotActivity.DEBUG) {
-            int length = mLogTextView.getText().length();
-            if (length < 10000) {
-                mLogTextView.append(values[0] + '\n');
-            } else {
-                mLogTextView.setText(mLogTextView.getText().subSequence(length - 5000, length));
-            }
-        }
+    public void start() {
+        CommunicationThread thread = new CommunicationThread();
+        mScheduler = Executors.newSingleThreadScheduledExecutor();
+        mScheduler.scheduleAtFixedRate(thread, 0, READING_POLLING_TIME, TimeUnit.MILLISECONDS);
     }
 
-    @Override
-    protected Void doInBackground(RobotActivity... params) {
-        DateFormat mDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-        while (mKeepAlive) {
-            try {
-                // Sending phase
-                String mSending = getOutgoing();
-                if (!mLastSent.equals(mSending)) {
-                    Date mDate = new Date();
-                    publishProgress(mDateFormat.format(mDate) + " | Sending: " + mSending);
-                    mLastSent = mSending;
-                }
-                //sending the last command until it changes
-                mArduino.writeSerial(mSending);
-
-                // Receiving phase
-                String mReceiving = mArduino.readString();
-                if (!mReceiving.equals("") && !mReceiving.equals(mLastReceived)) {
-                    setIncoming(mReceiving);
-                    mLastReceived = mReceiving;
-                    Date mDate = new Date();
-                    publishProgress(mDateFormat.format(mDate) + " | Receiving: " + mReceiving);
-                }
-                Thread.sleep(DELAY);
-            } catch (Exception ex) {
-                Log.e(TAG, ex.getMessage());
-            }
-        }
-        return null;
-    }
-
-    synchronized public String getIncoming() {
-        return mIncomingMessageObservable.getIncoming();
-    }
-
-    synchronized private String getOutgoing() {
-        return mOutgoing;
-    }
-
-    synchronized private void setIncoming(String incoming) {
-        mIncomingMessageObservable.setIncoming(incoming);
+    public void stop() {
+        mScheduler.shutdown();
     }
 
     synchronized public void setOutgoing(String outgoing) {
         this.mOutgoing = outgoing;
     }
 
-    public void setKeepAlive(boolean mKeepAlive) {
-        this.mKeepAlive = mKeepAlive;
+    private class CommunicationThread implements Runnable {
+
+        @Override
+        public void run() {
+            // Sending phase
+            mArduino.write(mOutgoing);
+
+            // Receiving phase
+            String mReceiving = mArduino.read().getString();
+            if (!mReceiving.equals("") && !mReceiving.equals(mLastReceived)) {
+                IncomingMessage.getInstance().setIncoming(mReceiving);
+                mLastReceived = mReceiving;
+            }
+        }
     }
 }
