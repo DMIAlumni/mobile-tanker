@@ -39,10 +39,10 @@ public class Communicator {
         @Override
         public void run() {
             // Sending phase
-            mArduino.writeSerial(mOutgoing);
+            mArduino.write(mOutgoing);
 
             // Receiving phase
-            String mReceiving = mArduino.readString();
+            String mReceiving = mArduino.read().getString();
             if (!mReceiving.equals("") && !mReceiving.equals(mLastReceived)) {
                 IncomingMessage.getInstance().setIncoming(mReceiving);
                 mLastReceived = mReceiving;
