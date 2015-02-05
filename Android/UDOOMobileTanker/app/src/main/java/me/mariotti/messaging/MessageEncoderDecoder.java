@@ -14,7 +14,6 @@ public class MessageEncoderDecoder {
     private final static int CMD_STOP = 2;
     private final static int CMD_LEFT = 3;
     private final static int CMD_RIGHT = 4;
-    private final static int CMD_SHOOT = 5;
     private final static int CMD_SEARCH = 10;
 
     //modes
@@ -26,13 +25,10 @@ public class MessageEncoderDecoder {
     protected final static int INFO = 0;
     protected final static int STATE = 1;
     // States
-    private final static int IDLE = 100;
+    public final static int IDLE = 100;
     public final static int SEARCHING = 101;
     public final static int HUNTING = 102;
     public final static int EMERGENCY = 103;
-    // Actions
-    private final static int STOPPED = 150;
-    private final static int MOVING = 151;
     // Infos
     public final static int DISTANCE = 203;
     public final static int TERMINATE = 999;

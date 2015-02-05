@@ -14,7 +14,7 @@ import java.util.Date;
 
 public class Communicator extends AsyncTask<RobotActivity, String, Void> {
     private final String TAG = "Communicator";
-    private final int DELAY = 50;
+    private final int DELAY = 50; // equal the delay set on Arduino
     private TextView mLogTextView;
     private String mOutgoing = MessageEncoderDecoder.stop(),
                    mLastSent = "",

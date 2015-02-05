@@ -126,11 +126,11 @@ public class TargetSearch {
         return mDirectionsUpdater;
     }
 
-    public void setTargetHSVColor(int hue, int saturation, int value) {
+    public void setTargetHsvColor(int hue, int saturation, int value) {
         mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(new Scalar(hue, saturation, value));
         mTargetColorHsv=new Scalar(hue,saturation,value);
     }
-    public void setTargetHSVColor(Scalar mHsvColor) {
+    public void setTargetHsvColor(Scalar mHsvColor) {
         mTargetColorRgba = ColorBlobDetector.convertScalarHsv2Rgba(mHsvColor);
         mTargetColorHsv=mHsvColor;
     }

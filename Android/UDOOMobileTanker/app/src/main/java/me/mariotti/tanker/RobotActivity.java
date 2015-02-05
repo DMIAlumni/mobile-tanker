@@ -89,7 +89,7 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
                     mTextCurrentValue.setText(String.valueOf(progress) + "%");
                 }
                 //Convert the seekbars range (360*10 for H and 100*10 for S,V) to OpenCV value for HSV (H: 0-255, S: 0-255, V: 0-255)
-                mTargetSearch.setTargetHSVColor(mHue.getProgress() / 10 * 255 / 360,
+                mTargetSearch.setTargetHsvColor(mHue.getProgress() / 10 * 255 / 360,
                                                 mSaturation.getProgress() / 10 * 255 / 100,
                                                 mValue.getProgress() / 10 * 255 / 100);
             }
@@ -241,7 +241,7 @@ public class RobotActivity extends Activity implements CvCameraViewListener, Vie
         Log.i(TAG, "Touched HSV color: (" + mBlobColorHsv.val[0] + ", " + mBlobColorHsv.val[1] +
                    ", " + mBlobColorHsv.val[2] + ", " + mBlobColorHsv.val[3] + ")");
 
-        mTargetSearch.setTargetHSVColor(mBlobColorHsv);
+        mTargetSearch.setTargetHsvColor(mBlobColorHsv);
         mHue.setProgress((int) mBlobColorHsv.val[0] * 10 * 360 / 255);
         mSaturation.setProgress((int) mBlobColorHsv.val[1] * 10 * 100 / 255);
         mValue.setProgress((int) mBlobColorHsv.val[2] * 10 * 100 / 255);

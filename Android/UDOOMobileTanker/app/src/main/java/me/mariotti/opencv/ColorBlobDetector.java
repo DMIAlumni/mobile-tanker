@@ -72,9 +72,9 @@ public class ColorBlobDetector {
             mSpectrumHsv.put(0, j, tmp);
         }
 
+
         Imgproc.cvtColor(mSpectrumHsv, mSpectrum, Imgproc.COLOR_HSV2RGB_FULL, 4);
     }
-
     public void process(Mat rgbaImage) {
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
@@ -115,7 +115,6 @@ public class ColorBlobDetector {
     }
 
     public Mat getSpectrum() {
-
         return mSpectrum;
     }
 
