@@ -123,36 +123,12 @@
                 android:text="@string/Chose_a_color"
                 android:id="@+id/DirectionsTextView" android:layout_gravity="center" android:layout_weight="1"
                 android:textSize="14dp"/>
-        <ScrollView
-                android:layout_width="fill_parent"
-                android:layout_height="0dp"
-                android:id="@+id/scrollView" android:layout_weight="3">
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/LogTextView"
-                    android:layout_gravity="bottom"/>
-
-        </ScrollView>
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:layout_gravity="center_horizontal"
                 android:gravity="center_vertical|center_horizontal">
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Log"
-                    android:id="@+id/textView" android:layout_gravity="center_vertical|right"
-                    android:singleLine="false"/>
-            <ToggleButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DEBUG"
-                    android:id="@+id/debugButton" android:singleLine="true" android:onClick="toggleDebug"
-                    android:nestedScrollingEnabled="true" android:layout_gravity="center_vertical"
-                    android:gravity="center_vertical|center_horizontal"/>
-            <ToggleButton
+        <ToggleButton
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:text="Start/Stop"
