@@ -1,4 +1,4 @@
-package me.mariotti.tanker;
+package me.mariotti.logic;
 
 import android.view.View;
 import android.widget.ImageView;

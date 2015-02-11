@@ -3,8 +3,8 @@ package me.mariotti.opencv;
 
 import android.util.Log;
 import me.mariotti.ai.BaseAi;
-import me.mariotti.tanker.RobotActivity;
-import me.mariotti.tanker.UpdateDirections;
+import me.mariotti.logic.RobotActivity;
+import me.mariotti.logic.UpdateDirections;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 

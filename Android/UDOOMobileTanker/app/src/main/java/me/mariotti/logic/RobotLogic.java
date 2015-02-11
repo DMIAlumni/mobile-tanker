@@ -1,4 +1,4 @@
-package me.mariotti.tanker;
+package me.mariotti.logic;
 
 import android.util.Log;
 import me.mariotti.ai.BaseAi;
@@ -183,7 +183,7 @@ public class RobotLogic extends BaseAi {
                     }
                 } else {// Target aimed
                     mTurnVelocity = MessageEncoder.DEFAULT_VELOCITY;
-                    mCommunicator.setOutgoing(MessageEncoder.moveForward(MessageEncoder.DEFAULT_VELOCITY, MessageEncoder.DEFAULT_VELOCITY));
+                    mCommunicator.setOutgoing(MessageEncoder.moveForward(MessageEncoder.DEFAULT_VELOCITY-15, MessageEncoder.DEFAULT_VELOCITY-15));
                     mIsMovingForward = true;
                 }
                 mLastTargetCenter = mTargetCenter;

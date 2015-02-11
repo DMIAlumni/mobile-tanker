@@ -1,12 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="me.mariotti.tanker">
+          package="me.mariotti.logic">
 
     <application android:allowBackup="true"
                  android:label="@string/app_name"
                  android:icon="@drawable/ic_launcher"
                  android:theme="@style/AppTheme">
         <activity
-                android:name=".RobotActivity"
+                android:name="me.mariotti.logic.RobotActivity"
                 android:label="@string/app_name"
                 android:theme="@android:style/Theme.Holo.Light.NoActionBar.Fullscreen">
             <intent-filter>

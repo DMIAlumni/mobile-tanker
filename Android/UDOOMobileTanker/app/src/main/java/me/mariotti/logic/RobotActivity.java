@@ -1,8 +1,6 @@
-package me.mariotti.tanker;
+package me.mariotti.logic;
 
 import android.app.Activity;
-import android.content.Context;
-import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
